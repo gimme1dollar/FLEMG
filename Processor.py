@@ -9,9 +9,34 @@ Tensorflow LSTM Network for Regression from EMG to FLEX
 ***Yet Editing***
 """
 
+class Preprocessor:
+	def __init__(self, data = [], count = 0):
+		self.data = data
+		self.count = count
+
+		self.training_data= []
+		self.training_label = []
+		self.test_data= []
+		self.test_label = []
+
+	def build_training_set(self):
+		self.count = int(len(xy) * 0.7)
+		self.training_data = self.data[0:train_size]
+		self.validation_data = []
+		self.test_data = self.data[train_size - seq_length:]
+
+	def load_trainig_data(self, location='default'):
+		self.training_data = np.loadtxt(location, delimiter=',')
+
+	def load_test_data(self, location = 'default'):
+		self.test_data = np.loadtxt(location, delimiter=',')
+
 class LSTM_Network:
-	def __init__(self, seq_length = 3, data_dim = 8, hidden_dim = 30, output_dim = 6, learning_rate = 0.01, LSTM_stack = 2):
+	def __init__(self, data_processor = Preprocessor(), seq_length = 3, data_dim = 8, hidden_dim = 30, output_dim = 6, learning_rate = 0.01, LSTM_stack = 2):
 		tf.set_random_seed(777)  # reproducibility
+		
+		self.data_processor = data_processor
+		
 		self.seq_length = seq_length
 		self.data_dim = data_dim
 		self.hidden_dim = hidden_dim
@@ -53,17 +78,17 @@ class LSTM_Network:
 	def infer():
 		prediction = []
 
-		for idx in range(len(testX)) :
+		for idx in range(len(self.data_processor.test_set)) :
 			for j in range(6):
-				testX[idx, 0, j+8] = testY[idx,j]
-				testX[idx, 1, j+8] = testY[idx,j]
-				testX[idx, 2, j+8] = testY[idx,j]
+				self.data_processor.test_data[idx, 0, j+8] = self.data_processor.test_label[idx,j]
+				self.data_processor.test_data[idx, 1, j+8] = self.data_processor.test_set[idx,j]
+				self.data_processor.test_data[idx, 2, j+8] = self.data_processor.test_set[idx,j]
                     
-		test_predict = self.sess.run(Y_pred, feed_dict= {X: [testX[idx]]})
+		test_predict = self.sess.run(Y_pred, feed_dict= {X: [self.data_processor.test_data[idx]]})
 		prediction.append(test_predict[0]) 
             
 		# RMSE
-		rmse_val = self.sess.run(rmse, feed_dict={targets: testY, predictions: prediction})
+		rmse_val = self.sess.run(rmse, feed_dict={targets: self.data_processor.test_label, predictions: prediction})
 		print("RMSE: {}".format(rmse_val))
 
 	def close():
