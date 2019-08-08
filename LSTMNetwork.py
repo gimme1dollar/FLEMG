@@ -6,6 +6,7 @@ import time
 
 """
 Tensorflow LSTM Network for Regression from EMG to FLEX
+Input data is composed of FLEX+EMG data window, and output prediction is FLEX (target) value.
 """
 
 class LSTM_Network:
@@ -70,11 +71,13 @@ class LSTM_Network:
 		# Test step
 		testX = data_processor.data
 		for idx in range(len(testX)) :
+			# Set default value on FLEX sensor data
 			if idx == 0:
 				for j in range(data_processor.label_dim):
 					for l in range(data_processor.seq_length):
 						testX[idx, l, j + (data_processor.index_dim + data_processor.data_dim - 1)] = default_
 				test_predict = self.sess.run(self.Y_pred, feed_dict={self.X: [testX[idx]]})
+			# Set default value on FLEX sensor data of input (previously, it was the prediction)
 			elif idx < data_processor.seq_length:
 				for j in range(data_processor.label_dim):
 					for l in range(data_processor.seq_length):
