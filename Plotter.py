@@ -6,34 +6,18 @@ import os
   Plot Graph with Sensor(Flex) and Prediction Values for comparison
 """
 
-"""
-accuracy = finderror(test_predict,testY)
-print("accuracy = ", accuracy)
+class plotter:
+    def __init__(self, prediction = [], label = [], index = [], dim = 6):
+        self.prediction = prediction
+        self.label = label
+        self.index = index
+        self.dim = dim
+    
+    def plot_comparison(self, subplot_row = 2, size = (20,10)):
+        plt.figure(2)
+        plt.figure(figsize=size)
 
-prediction = np.asarray(prediction)
-
-plt.figure(2)
-plt.figure(figsize=(20,10))
-plt.subplot(2,3,1)
-plt.ylim([0,0.5])
-plt.plot(testT[:,:,0],prediction[:,0],'r',testT[:,:,0],testY[:,0],'b')
-plt.subplot(2,3,2)
-plt.ylim([0,0.5])
-plt.plot(testT[:,:,0],prediction[:,1],'r',testT[:,:,0],testY[:,1],'b')
-plt.subplot(2,3,3)
-plt.ylim([0,0.5])
-plt.plot(testT[:,:,0],prediction[:,2],'r',testT[:,:,0],testY[:,2],'b')
-plt.subplot(2,3,4)
-plt.ylim([0,0.5])
-plt.plot(testT[:,:,0],prediction[:,3],'r',testT[:,:,0],testY[:,3],'b')
-plt.subplot(2,3,5)
-plt.ylim([0,0.5])
-plt.plot(testT[:,:,0],prediction[:,4],'r',testT[:,:,0],testY[:,4],'b')
-plt.subplot(2,3,6)
-plt.ylim([0,0.5])
-plt.plot(testT[:,:,0],prediction[:,5],'r',testT[:,:,0],testY[:,5],'b')
-"""
-
-class Plotter:
-  def __init__(self):
-    pass
+        for i in range(self.dim):
+            plt.subplot(subplot_row, int( self.dim/subplot_row ), i+1)
+            plt.ylim([0,0.5])
+            plt.plot(self.index[:,:,0], self.prediction[:,i],'r', self.index[:,:,0], self.label[:,i],'b')
