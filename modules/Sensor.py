@@ -25,13 +25,13 @@ class sensor:
 
     # Set member values related to the ports
 		if self.flex_port.is_open:
-			self_flex_port_flag = True
+			self.flex_port_flag = True
 			print('FLEX serial port open')
 		else:
 			print('FLEX serial not open')
 
 		if self.emg_port.is_open:
-			self_emg_port_flag = True
+			self.emg_port_flag = True
 			print('EMG serial port open')
 		else:
 			print('EMG serial not open')
@@ -109,9 +109,10 @@ class sensor:
 						break
           
 				# Stack Data
-				temp = [int(time_index)] + emg_data + flex_data
+				tmp = [int(time_index)] + emg_data + flex_data
 				self.data.append(tmp)
 				self.count = self.count + 1
+        
 		else:
 			print('Serial Not Open')
 
@@ -125,11 +126,6 @@ class sensor:
 		self.data = []
 		self.count = 0
             
-	def save_data_set(self, location='default.csv', delimiter=',', format ='%d'):
-		np.savetxt(location, self.data, delimiter=delimiter, fmt=format)
+	def save_data_set(self, location='default.csv', deli=',', format ='%d'):
+		np.savetxt(location, self.data, delimiter=deli, fmt=format)
 		print("Save FLEMG dataset to " + str(location))
-
-	def load_data_set(self, location='default', delimiter=','):
-		self.data = np.loadtxt(location, delimiter = delimiter)
-		self.data_count = len(self.data)
-		print("Load FLEMG dataset from " + str(location))
