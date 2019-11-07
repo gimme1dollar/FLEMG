@@ -23,18 +23,14 @@ class Sensor(threading.Thread):
 
     self.data = 0
 
-  def 
-
   def run(self):
     while True:
       if self.__suspend:
         pass
   
+      # Put Received Data into Storage, which will be later encoded by Encoder
       self.storage.put([self.data, self.data + 1])
       self.data += 1
-
-      # Grain received data
-
 
       if self.__exit:
         break

@@ -1,28 +1,30 @@
 import tensorflow as tf
 import Encoder
-encoder = Encoder.preprocessor()
+encoder = Encoder.encoder()
 import os
 
 """
 Tensorflow LSTM Network for Regression from EMG to FLEX
 """
 class preprocessor:
-	def __init__(self, raw = [], data_dim = 8, label_dim = 6, index_dim = 1, seq_length = 3):
-		self.raw = raw
+	def __init__(self, encoder = encoder(), encoded_data = [], data_dim = 8, label_dim = 6, index_dim = 1, seq_length = 3):
+		self.encoded_data = encoded_data
         
-		self.data = []
+		self.processed_data = []
 		self.label = []
-		self.count = 0
 		self.index = []
         
-		self.data_dim = data_dim
-		self.label_dim = label_dim
-		self.index_dim = index_dim
+		self.data_dim = encoder.emg_dim + encoder.flex_dim
+		self.label_dim = encoder.flex_dim
+		self.index_dim = encoder.index_dim
 		self.seq_length = seq_length
 
-
 	def load(self, location='default', delimiter = ','):
-		self.raw = np.loadtxt(location, delimiter = delimiter)
+		self.encoded_data = np.loadtxt(location, delimiter = delimiter)
+        
+	def save(self, location='default', delimiter = ','):
+    # TODO
+		pass
         
 	def scale(self, emg_max = 1024, flex_max = 128, chunk = 30):
 		w_e=emg_max/chunk
@@ -30,27 +32,26 @@ class preprocessor:
 		e_f=emg_max/flex_max
 
 		denominator = [1/w_e, e_f,e_f,e_f,e_f,e_f,e_f,e_f,e_f,chunk,chunk,chunk,chunk,chunk,chunk]
-		self.raw = np.round(self.raw/denominator)/(w_e)
+		self.encoded_data = np.round(self.encoded_data/denominator)/(w_e)
         
 	def preprocess(self):
 		if (self.seq_length <= len(self.data)):
-			print("Error : seqence length " + self.seq_length + " is shorter than data count " + len(self.data))
+			print("Error : seqence length " + self.seq_length + " is shorter than data count " + len(self.processed_data))
 			return
             
 		dataX = []
 		dataY = []
 		dataT = []
-		for i in range(len(self.raw) - self.seq_length + 1):
-			_x = self.raw[i:i+self.seq_length, self.index_dim:]
-			_y = self.raw[i+self.seq_length-1, self.index_dim+self.data_dim:]  # Next close price
-			_t = self.raw[i:i+self.seq_length, :self.index_dim]
+		for i in range(len(self.encoded_data) - self.seq_length + 1):
+			_x = self.encoded_data[i:i+self.seq_length, self.index_dim:]
+			_y = self.encoded_data[i+self.seq_length-1, self.data_dim:]  # Next close price
+			_t = self.encoded_data[i:i+self.seq_length, :self.index_dim]
 			dataX.append(_x)
 			dataY.append(_y)
 			dataT.append(_t)
 		
-		self.count = len(self.data)
 		self.index = np.array(dataT)
-    self.data = np.array(dataX)
+    self.processed_data = np.array(dataX)
 		self.label = np.array(dataY)
 
     return self.index, self.data, self.label
@@ -60,8 +61,8 @@ class network:
 		tf.set_random_seed(777)  # reproducibility
 		self.data_encoder = data_encoder
 		self.seq_length = data_encoder.seq_length
-		self.data_dim = data_encoder.data_dim
-		self.output_dim = data_encoder.label_dim
+		self.data_dim = data_encoder.flex_dim +  data_encoder.emg_dim
+		self.output_dim = data_encoder.flex_dim
 		self.hidden_dim = hidden_dim
 		self.learning_rate = learning_rate
 		self.LSTM_stack = LSTM_stack
@@ -79,7 +80,7 @@ class network:
 
 	def construct_placeholders(self):
 		# Input Place holders
-		self.X = tf.placeholder(tf.float32, [None, self.seq_length, self.data_dim+self.output_dim])
+		self.X = tf.placeholder(tf.float32, [None, self.seq_length, self.data_dim])
 		self.Y = tf.placeholder(tf.float32, [None, self.output_dim])
 
 		# Build a LSTM network
