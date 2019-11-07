@@ -18,7 +18,8 @@ thread_EMG = threading.Thread(target=serial_read, args=(tester,1),)
 
 thread_FLEX.start(), thread_EMG.start()
 
-while 1:
+iter = 0
+while iter < 30:
   if queue_list[0].qsize() > 6 and queue_list[1].qsize() > 8:
     FLEX = list(queue_list[0].queue)
     EMG = list(queue_list[1].queue)
@@ -26,4 +27,5 @@ while 1:
     print(f"Data_raw: {[FLEX, EMG]}")
 
     queue_list[0].get(True,1), queue_list[1].get(True,1)
+    iter += 1
     
