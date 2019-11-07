@@ -6,6 +6,54 @@ import os
 """
 Tensorflow LSTM Network for Regression from EMG to FLEX
 """
+class preprocessor:
+	def __init__(self, raw = [], data_dim = 8, label_dim = 6, index_dim = 1, seq_length = 3):
+		self.raw = raw
+        
+		self.data = []
+		self.label = []
+		self.count = 0
+		self.index = []
+        
+		self.data_dim = data_dim
+		self.label_dim = label_dim
+		self.index_dim = index_dim
+		self.seq_length = seq_length
+
+
+	def load(self, location='default', delimiter = ','):
+		self.raw = np.loadtxt(location, delimiter = delimiter)
+        
+	def scale(self, emg_max = 1024, flex_max = 128, chunk = 30):
+		w_e=emg_max/chunk
+		w_f=flex_max/chunk
+		e_f=emg_max/flex_max
+
+		denominator = [1/w_e, e_f,e_f,e_f,e_f,e_f,e_f,e_f,e_f,chunk,chunk,chunk,chunk,chunk,chunk]
+		self.raw = np.round(self.raw/denominator)/(w_e)
+        
+	def preprocess(self):
+		if (self.seq_length <= len(self.data)):
+			print("Error : seqence length " + self.seq_length + " is shorter than data count " + len(self.data))
+			return
+            
+		dataX = []
+		dataY = []
+		dataT = []
+		for i in range(len(self.raw) - self.seq_length + 1):
+			_x = self.raw[i:i+self.seq_length, self.index_dim:]
+			_y = self.raw[i+self.seq_length-1, self.index_dim+self.data_dim:]  # Next close price
+			_t = self.raw[i:i+self.seq_length, :self.index_dim]
+			dataX.append(_x)
+			dataY.append(_y)
+			dataT.append(_t)
+		
+		self.count = len(self.data)
+		self.index = np.array(dataT)
+    self.data = np.array(dataX)
+		self.label = np.array(dataY)
+
+    return self.index, self.data, self.label
 
 class network:
 	def __init__(self, data_encoder = encoder(), hidden_dim = 30, learning_rate = 0.01, LSTM_stack = 2):
@@ -52,7 +100,7 @@ class network:
 		self.flag_kernel_opened = True
 		self.flag_placeholder = True
         
-	def train_network(self, training_data = [], training_label = [], iterations = 5000, location = 'model/temp'):
+	def train(self, training_data = [], training_label = [], iterations = 5000, location = 'model/temp'):
 		self.sess = tf.Session(graph=self.graph)
 		init = tf.global_variables_initializer()
 		self.sess.run(init)
@@ -68,7 +116,7 @@ class network:
 		self.saver = tf.train.Saver()
 		self.saver.save(self.sess, location+"/lstm.ckpt")
 
-	def restore_network(self, location='model/_'):
+	def restore(self, location='model/_'):
 		if (not self.flag_placeholder) :
 			self.construct_placeholders()
 		if (os.path.exists(location) == False):
@@ -77,35 +125,31 @@ class network:
 		self.saver = tf.train.Saver()
 		self.saver.restore(self.sess, tf.train.latest_checkpoint(location))
 
-	def infer(self, data_encoder = None, default_ = 0.39):
-		if data_encoder is None: data_encoder = self.data_encoder
-
+	def infer(self, testSet = [], default_ = 0.39):
 		prediction = []
-		# Test step
-		testX = data_encoder.data
-		for idx in range(len(testX)) :
+		for idx in range(len(testSet)) :
 			if idx == 0:
-				for j in range(data_encoder.label_dim):
-					for l in range(data_encoder.seq_length):
-						testX[idx, l, j + (data_encoder.index_dim + data_encoder.data_dim - 1)] = default_
+				for j in range(self.data_encoder.label_dim):
+					for l in range(self.data_encoder.seq_length):
+						testX[idx, l, j + (self.data_encoder.index_dim + self.data_encoder.data_dim - 1)] = default_
 				test_predict = self.sess.run(self.Y_pred, feed_dict={self.X: [testX[idx]]})
-			elif idx < data_encoder.seq_length:
-				for j in range(data_encoder.label_dim):
-					for l in range(data_encoder.seq_length):
-						if data_encoder.seq_length == l:
-							testX[idx, l, j + (data_encoder.index_dim + data_encoder.data_dim - 1)] = test_predict[0][j]
+			elif idx < self.data_encoder.seq_length:
+				for j in range(self.data_encoder.label_dim):
+					for l in range(self.data_encoder.seq_length):
+						if self.data_encoder.seq_length == l:
+							testX[idx, l, j + (self.data_encoder.index_dim + self.data_encoder.data_dim - 1)] = test_predict[0][j]
 						elif idx < l:
-							testX[idx, l, j + (data_encoder.index_dim + data_encoder.data_dim - 1)] = testX[idx-(data_encoder.seq_length-l),data_encoder.seq_length-1,j+data_encoder.data_dim]
+							testX[idx, l, j + (self.data_encoder.index_dim + self.data_encoder.data_dim - 1)] = testX[idx-(self.data_encoder.seq_length-l),self.data_encoder.seq_length-1,j+self.data_encoder.data_dim]
 						else:
-							testX[idx, l, j + (data_encoder.index_dim + data_encoder.data_dim - 1)] = default_
+							testX[idx, l, j + (self.data_encoder.index_dim + self.data_encoder.data_dim - 1)] = default_
 				test_predict = self.sess.run(self.Y_pred, feed_dict={self.X: [testX[idx]]})
 			else: 
-				for j in range(data_encoder.label_dim):
-					for l in range(data_encoder.seq_length):
-						if data_encoder.seq_length == l:
-							testX[idx, l, j + (data_encoder.index_dim + data_encoder.data_dim - 1)] = test_predict[0][j]
+				for j in range(self.data_encoder.label_dim):
+					for l in range(self.data_encoder.seq_length):
+						if self.data_encoder.seq_length == l:
+							testX[idx, l, j + (self.data_encoder.index_dim + self.data_encoder.data_dim - 1)] = test_predict[0][j]
 						elif idx < l:
-							testX[idx, l, j + (data_encoder.index_dim + data_encoder.data_dim - 1)] = testX[idx-(data_encoder.seq_length-l),data_encoder.seq_length-1,j+data_encoder.data_dim]
+							testX[idx, l, j + (self.data_encoder.index_dim + self.data_encoder.data_dim - 1)] = testX[idx-(self.data_encoder.seq_length-l),self.data_encoder.seq_length-1,j+self.data_encoder.data_dim]
 				test_predict = self.sess.run(self.Y_pred, feed_dict= {self.X: [testX[idx]]})
     
 			prediction.append(test_predict[0])

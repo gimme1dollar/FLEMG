@@ -2,7 +2,7 @@ from modules import Sensor, Encoder, Processor, Actor, Analysis
 import numpy as np
 
 Collector = Sensor.sensor
-Encoder = Encoder.encoder
+Encoder = Processor.encoder
 LSTM_Network = Processor.network
 Simulator = Actor.effector
 
@@ -14,7 +14,7 @@ data_collector.save_data_set(format='%d')
 data = data_collector.data
 data_processor = Encoder(data, seq_length = 5)
 data_processor.scale()
-data_processor.preprocess()
+trainIndex, trainData, trainLabel = data_processor.preprocess()
 
 print( f"Index shape : {data_processor.index.shape}"
       f"Data shape : {data_processor.data.shape}"
@@ -23,11 +23,11 @@ print( f"Index shape : {data_processor.index.shape}"
 with LSTM_Network(data_processor) as Network:
   with Network.graph.as_default():
     Network.construct_placeholders()
-    Network.train_network(data_processor.data, data_processor.label, 2)
-  Network.restore_network('model/_')
+    Network.train(trainData, trainLabel, 2)
+  Network.restore('model/_')
 
   prediction = Network.infer()
-  p = Analysis.plotter(np.asarray(prediction), data_processor.label, data_processor.index, 6)
+  p = Analysis.plotter(np.asarray(prediction), trainLabel, trainIndex, 6)
   p.plot_comparison()
 #Network.close()
 
