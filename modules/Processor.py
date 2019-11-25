@@ -38,11 +38,14 @@ class preprocessor:
 		denominator = [1/w_e, e_f,e_f,e_f,e_f,e_f,e_f,e_f,e_f,chunk,chunk,chunk,chunk,chunk,chunk]
 		self.raw = np.round(self.raw/denominator)/(w_e)
         
-	def preprocess(self):
-		if (self.encoder.seq_length <= len(self.data)):
+	def preprocess(self, data = None):
+		if data is not None:
+			self.raw = np.asarray(data)
+
+		if (self.encoder.seq_length >= len(self.raw)):
 			print("Error : seqence length " + self.encoder.seq_length + " is shorter than data count " + len(self.data))
 			return
-            
+
 		dataX = []
 		dataY = []
 		dataT = []
@@ -134,39 +137,40 @@ class network:
 		self.saver = tf.train.Saver()
 		self.saver.restore(self.sess, tf.train.latest_checkpoint(location))
 
-	def infer(self, testSet = [], testLabel = [], default_ = 0.39):
+	def infer(self, testSet = [], testLabel = None, default_ = 0.39):
 		prediction = []
-		for idx in range(len(testSet)) :
+		for idx in range( len(testSet) ):
+			# testSet Reconstruction
 			if idx == 0:
 				for j in range(self.data_encoder.label_dim):
 					for l in range(self.data_encoder.seq_length):
-						testSet[idx, l, j + self.data_encoder.emg_dim] = default_
-				test_predict = self.sess.run(self.Y_pred, feed_dict={self.X: [testSet[idx]]})
+						testSet[idx, l, self.data_encoder.emg_dim + j] = default_
 			elif idx < self.data_encoder.seq_length:
 				for j in range(self.data_encoder.label_dim):
 					for l in range(self.data_encoder.seq_length):
-						if self.data_encoder.seq_length == l:
-							testSet[idx, l, j + self.data_encoder.emg_dim] = test_predict[0][j]
-						elif idx < l:
-							testSet[idx, l, j + self.data_encoder.emg_dim] = testSet[idx-(self.data_encoder.seq_length-l),self.data_encoder.seq_length-1,j+self.data_encoder.emg_dim]
+						if l == self.data_encoder.seq_length:
+							testSet[idx, l, self.data_encoder.emg_dim + j] = test_predict[0][j]
+						elif l > idx:
+							testSet[idx, l, self.data_encoder.emg_dim + j] = testSet[idx-(self.data_encoder.seq_length-l), self.data_encoder.seq_length - 1, self.data_encoder.emg_dim + j]
 						else:
-							testSet[idx, l, j + self.data_encoder.emg_dim] = default_
-				test_predict = self.sess.run(self.Y_pred, feed_dict={self.X: [testSet[idx]]})
-			else: 
+							testSet[idx, l, self.data_encoder.emg_dim + j] = default_
+			else:
 				for j in range(self.data_encoder.label_dim):
 					for l in range(self.data_encoder.seq_length):
-						if self.data_encoder.seq_length == l:
-							testSet[idx, l, j + self.data_encoder.emg_dim] = test_predict[0][j]
-						elif idx < l:
-							testSet[idx, l, j + self.data_encoder.emg_dim] = testSet[idx-(self.data_encoder.seq_length-l),self.data_encoder.seq_length-1,j+self.data_encoder.emg_dim]
-				test_predict = self.sess.run(self.Y_pred, feed_dict= {self.X: [testSet[idx]]})
-    
+						if l == self.data_encoder.seq_length:
+							testSet[idx, l, self.data_encoder.emg_dim + j] = test_predict[0][j]
+						elif l > idx:
+							testSet[idx, l, self.data_encoder.emg_dim + j] = testSet[idx-(self.data_encoder.seq_length-l), self.data_encoder.seq_length - 1, self.data_encoder.emg_dim + j]
+			# Feed testData
+			test_predict = self.sess.run(self.Y_pred, feed_dict= {self.X: [testSet[idx]]})
 			prediction.append(test_predict[0])
 
         # Calculate RMSE
-		rmse_val = self.sess.run(self.rmse, feed_dict={self.targets: testLabel, self.predictions: prediction})
-		print(f"RMSE: {rmse_val}\n")
-		return prediction, rmse_val
+		if testLabel is not None:
+			rmse_val = self.sess.run(self.rmse, feed_dict={self.targets: testLabel, self.predictions: prediction})
+			print(f"RMSE: {rmse_val}\n")
+			return prediction, rmse_val
+		return prediction
 
 	def close(self):
 		tf.reset_default_graph()

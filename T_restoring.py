@@ -6,10 +6,7 @@ Preprocessor = Processor.preprocessor()
 Network = Processor.network()
 
 Preprocessor.load('./data/full.csv')
-trainIndex, trainData, trainLabel = Preprocessor.preprocess()
-testIndex, testData, testLabel = trainIndex[2000:], trainData[2000:], trainLabel[2000:]
-trainIndex, trainData, trainLabel = trainIndex[:2000], trainData[:2000], trainLabel[:2000]
-
+testIndex, testData, testLabel = Preprocessor.preprocess()
 print(f"Index example: {trainIndex[0].reshape(-1)}\n"
       f"Data example: {trainData[0]} \n"
       f"Label example: {trainLabel[0]}\n")
@@ -18,7 +15,7 @@ with Network.graph.as_default():
     Network.construct_placeholders()
     print("Model Constructed\n")
 
-    Network.restore('model/_')
+    Network.restore('./model/1125(2)')
     prediction, rmse_val = Network.infer(testData, testLabel)
     p = Analysis.plotter(np.asarray(prediction), testLabel, testIndex, 6)
 
