@@ -9,14 +9,12 @@ import time
 start = time.time()
 maxsize = 0xffffffff
 queue_list = [queue.Queue(maxsize), queue.Queue(maxsize)]
-FLEX = Sensor.Sensor(q=queue_list[0], p = 'COM5', b = 115200)
-#EMG = Sensor.Sensor(q=queue_list[1], p = 'COM4', b = 115200)
+FLEX = Sensor.Sensor(q=queue_list[0], p = 'COM5', b = 115200, ch=6)
+EMG = Sensor.Sensor(q=queue_list[1], p = 'COM3', b = 115200, ch=8)
 Enco = Encoder.encoder(queue_list)
-Prep = Processor.preprocessor(Enco)
-
 
 FLEX.start()
-#EMG.start()
+EMG.start()
 try:
     while True:
         index = time.time() - start
@@ -25,11 +23,9 @@ try:
         Enco.encode(index)
         if Enco.count > 3:
             print(f"Enco {Enco.count} \t {Enco.dataSet[-1]}")
-            #Prep.preprocess(Enco.dataSet)
 
 except KeyboardInterrupt:
     print("keyboard interuupt")
     FLEX.exit()
-    #EMG.exit()
-    Prep.save('./data/encoding-test')
+    EMG.exit()
 

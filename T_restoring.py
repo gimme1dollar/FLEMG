@@ -15,7 +15,7 @@ with Network.graph.as_default():
     Network.construct_placeholders()
     print("Model Constructed\n")
 
-    Network.restore('./model/1125(2)')
+    Network.restore('./model/1124(2)')
     prediction, rmse_val = Network.infer(testData, testLabel)
     p = Analysis.plotter(np.asarray(prediction), testLabel, testIndex, 6)
 

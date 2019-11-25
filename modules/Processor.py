@@ -29,10 +29,9 @@ class preprocessor:
 		for s in range( self.encoder.seq_length-1 ):
 			whole = np.vstack((whole, np.concatenate(( self.index[i+1][s+1] , self.data[i+1][s+1] ), axis = 0)))
 		np.savetxt(location, whole.astype(int), fmt='%i', delimiter = delimiter)
-        
+
 	def scale(self, emg_max = 1024, flex_max = 128, chunk = 30):
 		w_e=emg_max/chunk
-		#w_f=flex_max/chunk
 		e_f=emg_max/flex_max
 
 		denominator = [1/w_e, e_f,e_f,e_f,e_f,e_f,e_f,e_f,e_f,chunk,chunk,chunk,chunk,chunk,chunk]
@@ -64,13 +63,12 @@ class preprocessor:
 		return self.index, self.data, self.label
 
 class network:
-	def __init__(self, data_encoder = encoder(), hidden_dim = 30):
+	def __init__(self, data_encoder = encoder()):
 		tf.set_random_seed(777)  # reproducibility
 		self.data_encoder = data_encoder
 		self.seq_length = data_encoder.seq_length
 		self.data_dim = data_encoder.flex_dim +  data_encoder.emg_dim
 		self.output_dim = data_encoder.flex_dim
-		self.hidden_dim = hidden_dim
         
 		self.graph = tf.Graph()
 		self.sess = tf.Session()
@@ -83,16 +81,17 @@ class network:
 		cell = tf.contrib.rnn.BasicLSTMCell(num_units = self.hidden_dim, state_is_tuple=True)
 		return cell
 
-	def construct_placeholders(self, learning_rate = 0.1, stak_dim = 2):
+	def construct_placeholders(self, learning_rate = 0.1, hidden_dim = 30, stak_dim = 2):
 		self.learning_rate = learning_rate
-		self.LSTM_stack = stak_dim
+		self.hidden_dim = hidden_dim
+		self.stack_dim = stak_dim
 
 		# Input Place holders
 		self.X = tf.placeholder(tf.float32, [None, self.seq_length, self.data_dim])
 		self.Y = tf.placeholder(tf.float32, [None, self.output_dim])
 
 		# Build a LSTM network
-		multi_cells = tf.contrib.rnn.MultiRNNCell([self.build_cell() for _ in range(self.LSTM_stack)], state_is_tuple=True)
+		multi_cells = tf.contrib.rnn.MultiRNNCell([self.build_cell() for _ in range(self.stack_dim)], state_is_tuple=True)
 		outputs, _states=tf.nn.dynamic_rnn(multi_cells, self.X, dtype=tf.float32)
 		self.Y_pred = tf.contrib.layers.fully_connected(outputs[:, -1], self.output_dim)
 
@@ -123,7 +122,7 @@ class network:
     
 		# Save Network
 		self.saver = tf.train.Saver()
-		location = location + "(" + str(self.LSTM_stack) + ")"
+		location = location + "(" + str(self.stack_dim) + ")"
 		self.saver.save(self.sess, location+"/lstm.ckpt")
 
 	def restore(self, location='model/_'):
