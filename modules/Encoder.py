@@ -82,8 +82,8 @@ class encoder:
 
         #Store
         if( len(f_d) == self.flex_dim and len(e_d) == self.emg_dim ):
-            tmp += f_d
             tmp += e_d
+            tmp += f_d
             self.dataSet.append(tmp) # [2320, 345, 407, 413, 412, 392, -576, -582, -529, -523, 617, 656, 631, -475]
             self.count += 1
 
