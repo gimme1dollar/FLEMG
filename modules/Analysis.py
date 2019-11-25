@@ -20,7 +20,7 @@ class plotter:
         print(f"{self.index[:3, :, 0].reshape(-1)} \n{self.prediction[:3, 0]} \n{self.label[:3, 0]}")
 
         for i in range(self.dim):
-            plt.subplot(subplot_row, int( self.dim/subplot_row ), i+1)
+            plt.subplot(subplot_row, int( self.dim//subplot_row ), i+1)
             plt.ylim([-1000,1000])
             plt.plot(self.index[:,:,0], self.prediction[:,i],'r', self.index[:,:,0], self.label[:,i],'b')
         fig.savefig(figloc, dpi=fig.dpi)

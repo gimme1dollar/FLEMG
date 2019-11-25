@@ -42,7 +42,7 @@ class preprocessor:
 			self.raw = np.asarray(data)
 
 		if (self.encoder.seq_length >= len(self.raw)):
-			print("Error : seqence length " + self.encoder.seq_length + " is shorter than data count " + len(self.data))
+			print(f"Error : seqence length {self.encoder.seq_length} is shorter than data count {len(self.raw)}")
 			return
 
 		dataX = []

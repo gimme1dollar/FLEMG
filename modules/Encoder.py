@@ -72,7 +72,6 @@ class encoder:
                             break
                     break
             e_str = str(e_token).replace('\'', '').replace(', ', '') # [-0.615,-0.541,-0.589,-0.550,0.452,0.565,0.554,-0.614]
-
             e_list = e_str.split(",")
             if (len(e_list) == self.emg_dim):
                 e_d.append(int(float(e_list[0].split('[')[1]) * 1000))
