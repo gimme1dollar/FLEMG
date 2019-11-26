@@ -1,27 +1,30 @@
 import matplotlib.pyplot as plt
-import matplotlib
-from pylab import *
+from drawnow import drawnow
 import numpy as np
-import time
-from random import seed
-from random import random
-from datetime import datetime
 
-plt.ion()
-label = ['thumb', 'index', 'middle', 'ring', 'pinky']
-index = np.arange(len(label))
+def draw():
+    xNum = len(xList)
+    plt.axis([np.clip(xNum, 0, xNum-10), xNum-1, 0, 2])
+    plt.plot(xList, yList)
+    plt.plot(xList, yList2)
 
-try:
-    while True:
-        seed(datetime.now())
-        value = [ int(random()*100) for i in range(5)]
-        fig = plt.figure()
-        plt.plot(index, value)
-        thismanager = get_current_fig_manager()
-        thismanager.window.wm_geometry("800x600+10+0")
-        plt.show()
-        plt.pause(1)
-        plt.close()
+plt.ion() # enable interactivity
+fig=plt.figure() # make a figure
 
-except KeyboardInterrupt:
-    print("Keyboard interrupted")
+xList=list()
+yList=list()
+yList2=list()
+
+i = 0
+while(True):
+    try:
+        y=np.random.random()
+        xList.append(i)
+        yList.append(y)
+        yList2.append(2 * y**2)
+        drawnow(draw)
+        plt.pause(0.001)
+        i+=1
+    except KeyboardInterrupt:
+        break
+        print("Exit")
