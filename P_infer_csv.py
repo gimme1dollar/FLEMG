@@ -9,8 +9,9 @@ Network = Processor.network()
 
 Preprocessor.load('./data/full(5).csv')
 trainIndex, trainData, trainLabel = Preprocessor.preprocess()
-testIndex, testData, testLabel = trainIndex[2000:], trainData[2000:], trainLabel[2000:]
-trainIndex, trainData, trainLabel = trainIndex[:2000], trainData[:2000], trainLabel[:2000]
+trainLength = int(len(trainIndex) * 0.7)
+testIndex, testData, testLabel = trainIndex[trainLength:], trainData[trainLength:], trainLabel[trainLength:]
+trainIndex, trainData, trainLabel = trainIndex[:trainLength], trainData[:trainLength], trainLabel[:trainLength]
 
 print(f"Index example: {trainIndex[0].reshape(-1)}\n"
       f"Data example: {trainData[0]} \n"

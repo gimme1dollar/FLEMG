@@ -12,6 +12,26 @@ from random import seed
 from random import random
 from datetime import datetime
 
+# Utility
+def draw():
+  try:
+    print(testData[-1])
+    print(testLabel[-1])
+    print(prediction[0])
+    xNum = 10
+    xLen = 50
+
+    plt.subplot(2, 1, 1)
+    plt.axis([np.clip(xNum, 0, xNum-xLen), xNum-1, 0, 500])
+    plt.plot(xList, yList, '+')
+    plt.plot(xList, yList1, 'o')
+
+    plt.subplot(2, 1, 2)
+    plt.axis([np.clip(xNum, 0, xNum-xLen), xNum-1, 0, 1000])
+    plt.plot(xList, yList2, 'o')
+  except:
+    print("draw excpetion")
+
 # Instantiation
 start = time.time()
 now = datetime.now()
@@ -22,6 +42,8 @@ EMG = Sensor.Sensor(q=queue_list[1], p = 'COM3', b = 115200, ch=8)
 Enco = Encoder.encoder(queue_list)
 Prep = Processor.preprocessor(Enco)
 Network = Processor.network()
+
+plt.ion()
 
 FLEX.start()
 EMG.start()
@@ -49,17 +71,11 @@ with Network.graph.as_default():
         prediction, rmse_val = Network.infer(testData, testLabel)
         print(f"prediction : {prediction[0]}")
 
-        plt.ion()
-        label = ['thumb', 'index', 'middle', 'ring', 'pinky']
-        index = np.arange(len(label))
-        seed(datetime.now())
-        fig = plt.figure()
-        plt.plot(index, prediction[0])
-        thismanager = get_current_fig_manager()
-        thismanager.window.wm_geometry("800x600+10+0")
-        plt.show()
-        time.sleep(0.5)
-        plt.close()
+        # Plotting
+        #label = ['thumb', 'index', 'middle', 'ring', 'pinky']
+        #index = np.arange(len(label))
+        drawnow(draw)
+        plt.pause(0.001)
 
   except KeyboardInterrupt:
     print("keyboard interuupt")

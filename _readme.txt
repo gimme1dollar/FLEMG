@@ -10,11 +10,13 @@ VSPE
 tensorflow
 numpy
 pyserial
+datetime
 matplotlib
+drawnow
 
 [프로그램 구동 방식]
 (0) Flex Sensor는 ...
-(0) EMG Sensor는 VSPE로 가상 시리얼 포트 만든다음에 OpenBCI GUI 통해서 Timeseries 데이터 보내는 방식으로 할 것
+(0) EMG Sensor는 VSPE로 가상 시리얼 포트 만든다음에 OpenBCI GUI 통해서 EMG데이터 보내는 방식
 
 (1) anaconda prompt에 들어가서 py36 환경 activate
 (2) Desktop/tmp_JYLee/FLEMG 디렉토리 들어가서 필요한 프로그램 소스코드 실행

@@ -22,11 +22,7 @@ try:
     while True:
         index = time.time() - start
         index = int(index*1000)
-
         Enco.encode(index)
-        if Enco.count > 3:
-            print(f"Enco {Enco.count} \t {Enco.dataSet[-1]}")
-            time.sleep(0.1)
 
 except KeyboardInterrupt:
     print("keyboard interuupt")

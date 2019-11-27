@@ -10,7 +10,7 @@ import os, sys
 class Sensor(threading.Thread):
     def __init__(self, q = queue.Queue(5000), p = 'COM5', b = 115200, ch = 8):
         threading.Thread.__init__(self)
-        self.num_channel = ch
+        self.channel = ch
         self.__suspend = False
         self.__exit = False
 
@@ -26,9 +26,8 @@ class Sensor(threading.Thread):
                     print('Serial suspended')
                     pass
 
-                data = self.port.read( sys.getsizeof(0.0) * self.num_channel)
+                data = self.port.readline()
                 self.storage.put(data)
-                #print(f"sensor :: {list(self.storage.queue)}")
 
                 if self.__exit:
                     print('Serial exit')
