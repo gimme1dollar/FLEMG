@@ -18,14 +18,22 @@ EMG.send("~5") # Sample Rate to 500Hz
 EMG.send('b') # Streaming Data
 EMG.start()
 
+time.sleep(1)
+count = 0
+start = time.time()
 try:
     while True:
         index = time.time() - start
         index = int(index*1000)
         Enco.encode_IDX(index)
 
-        if Enco.count > 3:
-            print(f"Enco {Enco.count} \t {Enco.dataSet[-1]}")
+        if (time.time() - start > 3) and (time.time() - start < 4):
+            count += 1
+            print(count)
+            print(Enco.dataSet[-1])
+        elif (time.time() - start > 4) :
+            print(count)
+            print(Enco.dataSet[-1])
 except KeyboardInterrupt:
     print("keyboard interuupt")
     FLEX.exit()

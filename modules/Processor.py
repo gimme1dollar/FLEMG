@@ -22,15 +22,16 @@ class preprocessor:
 		self.raw = np.loadtxt(location, delimiter = delimiter)
         
 	def save(self, location='default', delimiter = ','):
-		print(self.index)
-		print(self.data)
+		print("Save Start")
 		whole = np.concatenate((self.index[0][0] , self.data[0][0]), axis=0)
 		for i in range( len(self.index)-1 ):
 			tmp = np.concatenate((self.index[i+1][0] , self.data[i+1][0]), axis=0)
 			whole = np.vstack((whole, tmp))
 		for s in range( self.encoder.seq_length-1 ):
 			whole = np.vstack((whole, np.concatenate(( self.index[i+1][s+1] , self.data[i+1][s+1] ), axis = 0)))
-		np.savetxt(location, whole.astype(int), fmt='%i', delimiter = delimiter)
+
+		np.savetxt(location, whole, fmt='%s', delimiter = delimiter)
+		print("Save End")
 
 	def scale(self, emg_max = 1024, flex_max = 128, chunk = 30):
 		w_e=emg_max/chunk

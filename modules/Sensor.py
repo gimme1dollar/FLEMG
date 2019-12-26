@@ -10,7 +10,7 @@ import os, sys
 class Sensor_FLEX(threading.Thread):
     def __init__(self, q=queue.Queue(5000), p='COM5', b=115200):
         threading.Thread.__init__(self)
-        self.exit = False
+        self._exit = False
 
         self.storage = q
         self.port = serial.Serial(p, b, timeout=1)  # (port name, baudrate, timeout)
@@ -31,17 +31,13 @@ class Sensor_FLEX(threading.Thread):
             data = self.port.read(50)
             self.storage.put(data)
 
-            if self.exit:
-                break
-        print('FLEX Serial closed')
-
     def exit(self):
-        self.exit = True
+        self.port.close()
 
 class Sensor_EMG(threading.Thread):
     def __init__(self, q = queue.Queue(5000), p = 'COM5', b = 115200):
         threading.Thread.__init__(self)
-        self.exit = False
+        self._exit = False
 
         self.storage = q
         self.port = serial.Serial(p, b, timeout=1) # (port name, baudrate, timeout)
@@ -57,13 +53,8 @@ class Sensor_EMG(threading.Thread):
     def run(self):
         while self.port.is_open:
             data = self.port.read(65)
-            #print(data)
             self.storage.put(data)
 
-            if self.exit:
-                break
-        print('EMG Serial closed')
-
     def exit(self):
-        self.exit = True
+        self.port.close()
 
