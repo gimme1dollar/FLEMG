@@ -121,3 +121,29 @@ class encoder:
             self.queue_list[i].queue.clear()
 
         return flag
+
+    def encode_raw(self, idx):
+        if idx is not None:
+            tmp = [idx]
+        else:
+            tmp = [self.count]
+
+        try:
+            #tmp.append("FLEX")
+            f_q = self.queue_list[0].get()
+            tmp.append(str(f_q))
+
+            #tmp.append("EMG")
+            e_q = self.queue_list[1].get()
+            tmp.append(str(e_q))
+
+            self.dataSet.append(tmp)
+            #self.count += 1
+            #flag = 1
+        except :
+            return -1
+
+        # Clear Storage
+        #for i in range(len(self.queue_list)):
+            #self.queue_list[i].queue.clear()
+        return 1

@@ -14,7 +14,6 @@ class Sensor_FLEX(threading.Thread):
 
         self.storage = q
         self.port = serial.Serial(p, b, timeout=1)  # (port name, baudrate, timeout)
-        self.count = 0
 
         if self.port.is_open:
             print('FLEX Serial port open')
@@ -27,9 +26,16 @@ class Sensor_FLEX(threading.Thread):
             print("Serial closed")
 
     def run(self):
+        #start = time.time()
+        #count = 0
         while self.port.is_open:
-            data = self.port.read(50)
+            data = self.port.read(30)
             self.storage.put(data)
+
+            #if (time.time() - start > 4) and (time.time() - start < 5) :
+            #    count +=1
+            #elif (time.time() -start > 6) :
+            #    print(count)
 
     def exit(self):
         self.port.close()
@@ -52,7 +58,7 @@ class Sensor_EMG(threading.Thread):
 
     def run(self):
         while self.port.is_open:
-            data = self.port.read(65)
+            data = self.port.read(40)
             self.storage.put(data)
 
     def exit(self):
