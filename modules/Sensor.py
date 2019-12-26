@@ -7,44 +7,76 @@ except ImportError:
 import time
 import os, sys
 
-class Sensor(threading.Thread):
-    def __init__(self, q = queue.Queue(5000), p = 'COM5', b = 115200, ch = 8):
+class Sensor_EMG(threading.Thread):
+    def __init__(self, q = queue.Queue(5000), p = 'COM5', b = 115200):
         threading.Thread.__init__(self)
-        self.channel = ch
-        self.__suspend = False
-        self.__exit = False
+        self.exit = False
 
         self.storage = q
         self.port = serial.Serial(p, b, timeout=1) # (port name, baudrate, timeout)
+        self.count = 0
+
+        if self.port.is_open:
+            print('EMG Serial port open')
+
+    def send(self, char):
+        print(f"Serial Write {char}")
+        self.port.write(bytearray(char, 'ascii'))
 
     def run(self):
         if self.port.is_open:
-            print('Serial port open')
-
+            start = time.time()
             while True:
-                if self.__suspend:
-                    print('Serial suspended')
-                    pass
-
-                data = self.port.readline()
+                data = self.port.read(65)
+                if(time.time() - start > 7) and (time.time() - start < 8) :
+                    self.count += 1
+                elif (time.time() - start > 9) :
+                    print(self.count)
                 self.storage.put(data)
 
-                if self.__exit:
-                    print('Serial exit')
+                if self.exit:
+                    print('EMG Serial exit')
                     break
         else:
-            print('Serial not open')
-
-    def clear(self):
-        self.__suspend = True
-        self.storage.queue.clear()
-        self.__suspend = False
-
-    def suspend(self):
-        self.__suspend = True
-         
-    def resume(self):
-        self.__suspend = False
+            print('EMG Serial not open')
 
     def exit(self):
-        self.__exit = True
+        self.exit = True
+
+
+class Sensor_FLEX(threading.Thread):
+    def __init__(self, q=queue.Queue(5000), p='COM5', b=115200):
+        threading.Thread.__init__(self)
+        self.exit = False
+
+        self.storage = q
+        self.port = serial.Serial(p, b, timeout=1)  # (port name, baudrate, timeout)
+        self.count = 0
+
+        if self.port.is_open:
+            print('FLEX Serial port open')
+
+    def send(self, char):
+        print(f"Serial Write {char}")
+        self.port.write(bytearray(char, 'ascii'))
+
+    def run(self):
+        if self.port.is_open:
+            start = time.time()
+            while True:
+                data = self.port.read(50)
+                if (time.time() - start > 7) and (time.time() - start < 8):
+                    self.count += 1
+                elif (time.time() - start > 9):
+                    # print(data)
+                    print(self.count)
+                self.storage.put(data)
+
+                if self.exit:
+                    print('FLEX Serial exit')
+                    break
+        else:
+            print('FLEX Serial not open')
+
+    def exit(self):
+        self.exit = True

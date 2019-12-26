@@ -22,6 +22,8 @@ class preprocessor:
 		self.raw = np.loadtxt(location, delimiter = delimiter)
         
 	def save(self, location='default', delimiter = ','):
+		print(self.index)
+		print(self.data)
 		whole = np.concatenate((self.index[0][0] , self.data[0][0]), axis=0)
 		for i in range( len(self.index)-1 ):
 			tmp = np.concatenate((self.index[i+1][0] , self.data[i+1][0]), axis=0)
