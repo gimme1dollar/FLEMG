@@ -9,13 +9,13 @@ import time
 start = time.time()
 maxsize = 0xffffffff
 queue_list = [queue.Queue(maxsize), queue.Queue(maxsize)]
-FLEX = Sensor.Sensor(q=queue_list[0], p = 'COM6', b = 115200, t = 'F')
-EMG = Sensor.Sensor(q=queue_list[1], p = 'COM4', b = 115200, t = 'E')
+FLEX = Sensor.Sensor_FLEX(q=queue_list[0], p = 'COM6', b = 115200)
+EMG = Sensor.Sensor_EMG(q=queue_list[1], p = 'COM4', b = 115200)
 Enco = Encoder.encoder(queue_list)
 
+FLEX.start()
 EMG.send("~5") # Sample Rate to 500Hz
 EMG.send('b') # Streaming Data
-FLEX.start()
 EMG.start()
 
 try:
@@ -24,10 +24,8 @@ try:
         index = int(index*1000)
         Enco.encode_IDX(index)
 
-        #if Enco.count > 3:
-        #    print(f"Enco {Enco.count} \t {Enco.dataSet[-1]}")
-
-        print(time.time() - index - start)
+        if Enco.count > 3:
+            print(f"Enco {Enco.count} \t {Enco.dataSet[-1]}")
 except KeyboardInterrupt:
     print("keyboard interuupt")
     FLEX.exit()
