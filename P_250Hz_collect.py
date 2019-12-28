@@ -92,13 +92,13 @@ try:
         time.sleep(1)
 
         index = time.time() - start
-        tmp.append("b\'" + str(index)+"\'")
+        tmp.append("INDEX_b\'" + str(index)+"\'")
 
         f_q = queue_list[0].get()
-        tmp.append(str(f_q))
+        tmp.append( "FLEX_" + str(f_q) )
 
         e_q = queue_list[1].get()
-        tmp.append(str(e_q))
+        tmp.append( "EMG_" + str(e_q) )
 
         dataSet.append(tmp)
 
@@ -119,5 +119,6 @@ except KeyboardInterrupt:
 
     filename = str(now.year) + str(now.month) + str(now.day) + str(now.hour) + str(now.minute)
     sav_loc = './data/250Hz_' + filename + '.txt'
-    np.savetxt(sav_loc, np.asarray(dataSet), fmt='%s', delimiter='_delimeter_')
+    np.savetxt(sav_loc, np.asarray(dataSet), fmt='%s', delimiter='___')
     print("TXT saved")
+
