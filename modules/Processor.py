@@ -53,8 +53,8 @@ class preprocessor:
 		dataY = []
 		dataT = []
 		for i in range(len(self.raw) - self.encoder.seq_length + 1):
-			_x = self.raw[i:i+self.encoder.seq_length, self.encoder.index_dim : self.encoder.emg_dim] # emg데이터 부분만
-			_y = self.raw[i+self.encoder.seq_length-1, self.encoder.data_dim-self.encoder.label_dim+1:]  # Next close price
+			_x = self.raw[i:i+self.encoder.seq_length, self.encoder.index_dim : self.encoder.emg_dim] # Input이 emg데이터 부분만
+			_y = self.raw[i+self.encoder.seq_length-1, self.encoder.data_dim-self.encoder.label_dim+1:] 
 			_t = self.raw[i:i+self.encoder.seq_length, :self.encoder.index_dim]
 			dataX.append(_x)
 			dataY.append(_y)
@@ -66,7 +66,7 @@ class preprocessor:
 
 		return self.index, self.data, self.label   
   
-	def preprocess_feedback(self, data = None):
+	def preprocess_feedback_flex(self, data = None):
 		if data is not None:
 			self.raw = np.asarray(data)
 
@@ -79,7 +79,32 @@ class preprocessor:
 		dataT = []
 		for i in range(len(self.raw) - self.encoder.seq_length + 1):
 			_x = self.raw[i:i+self.encoder.seq_length, self.encoder.index_dim:]
-			_y = self.raw[i+self.encoder.seq_length-1, self.encoder.data_dim-self.encoder.label_dim+1:]  # Next close price
+			_y = self.raw[i+self.encoder.seq_length-1, self.encoder.data_dim-self.encoder.label_dim+1:] 
+			_t = self.raw[i:i+self.encoder.seq_length, :self.encoder.index_dim]
+			dataX.append(_x)
+			dataY.append(_y)
+			dataT.append(_t)
+		
+		self.index = np.array(dataT)
+		self.data = np.array(dataX)
+		self.label = np.array(dataY)
+
+		return self.index, self.data, self.label
+
+	def preprocess_feedback_whole(self, data = None):
+		if data is not None:
+			self.raw = np.asarray(data)
+
+		if (self.encoder.seq_length >= len(self.raw)):
+			print(f"Error : seqence length {self.encoder.seq_length} is shorter than data count {len(self.raw)}")
+			return
+
+		dataX = []
+		dataY = []
+		dataT = []
+		for i in range(len(self.raw) - self.encoder.seq_length + 1):
+			_x = self.raw[i:i+self.encoder.seq_length, self.encoder.index_dim:]
+			_y = self.raw[i+self.encoder.seq_length-1, 1:] # Label이 emg+flex데이터가 되도록
 			_t = self.raw[i:i+self.encoder.seq_length, :self.encoder.index_dim]
 			dataX.append(_x)
 			dataY.append(_y)
