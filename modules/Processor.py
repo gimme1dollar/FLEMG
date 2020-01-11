@@ -118,8 +118,32 @@ class preprocessor:
 
 		return self.index, self.data, self.label
 
+    def preprocess_feature_average(self, data = None):
+		if data is not None:
+			self.raw = np.asarray(data)
 
-    def feature_average(self, average_unit1 = 10, average_unit2 = 100, data = None):
+		if (self.encoder.seq_length >= len(self.raw)):
+			print(f"Error : seqence length {self.encoder.seq_length} is shorter than data count {len(self.raw)}")
+			return
+
+		dataX = []
+		dataY = []
+		dataT = []
+		for i in range(len(self.raw) - self.encoder.seq_length + 1):
+			_x = self.raw[i:i+self.encoder.seq_length, self.encoder.index_dim : self.encoder.emg_dim*3] 
+			_y = self.raw[i+self.encoder.seq_length-1, self.encoder.index_dim+self.encoder.emg_dim*3:] 
+			_t = self.raw[i:i+self.encoder.seq_length, :self.encoder.index_dim]
+			dataX.append(_x)
+			dataY.append(_y)
+			dataT.append(_t)
+		
+		self.index = np.array(dataT)
+		self.data = np.array(dataX)
+		self.label = np.array(dataY)
+
+		return self.index, self.data, self.label
+
+    def extract_feature_average(self, average_unit1 = 10, average_unit2 = 100, data = None):
 		if data is not None:
 			self.raw = np.asarray(data)
 
@@ -146,7 +170,7 @@ class preprocessor:
                 tmp = np.concatenate( (tmp, self.raw[i, 1+emg_length:]), axis=None)
                 
                 res.append(tmp.tolist())
-        return res
+        return np.asarray(res)
 
 class network_default:
 	def __init__(self, data_encoder = encoder()):
@@ -544,14 +568,17 @@ class network_feature_average:
 		self.saver.restore(self.sess, tf.train.latest_checkpoint(location))
 
 	def infer(self, testSet = [], testLabel = None, default_ = 0.39):
-        prediction = []
-        for idx in range(len(testSet)) :
-            for j in range(self.data_encoder.label_dim):
-                for l in range(self.data_encoder.seq_length):
-                    testSet[idx, l, self.data_dim - self.output_dim + j] = testLabel[idx,j]
-            
-            test_predict = sess.run(Y_pred, feed_dict= {X: [testSet[idx]]})
-            prediction.append(test_predict[0])
+                prediction = []
+                for idx in range(len(testSet)) :
+                    test_predict = self.sess.run(self.Y_pred, feed_dict= {self.X: [testSet[idx]]})
+                    prediction.append(test_predict[0])
+
+        # Calculate RMSE
+                if testLabel is not None:
+                        rmse_val = self.sess.run(self.rmse, feed_dict={self.targets: testLabel, self.predictions: prediction})
+                        print(f"RMSE: {rmse_val}\n")
+                        return prediction, rmse_val
+                return prediction
 
         # Calculate RMSE
 		if testLabel is not None:
