@@ -4,7 +4,7 @@ https://1drv.ms/x/s!AiJTKSbHxk7Zih2mGCHbA9-fEwU0?e=EzsuXN
 [프로그램 모듈]
 + 프로그램
 - Python
-- Anaconda : 가상 환경에서 tensorflow 등 돌리기 위함
+- Anaconda : 가상 환경에서 tensorflow 등 돌리기 위함 {https://niceman.tistory.com/85}
 - OpenBci-GUI
 - VSPE
 
