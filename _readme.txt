@@ -9,7 +9,7 @@ https://1drv.ms/x/s!AiJTKSbHxk7Zih2mGCHbA9-fEwU0?e=EzsuXN
 - VSPE
 
 + Python 모듈 
--tensorflow
+-tensorflow {https://joytk.tistory.com/7}
 -numpy
 -pyserial
 -datetime
