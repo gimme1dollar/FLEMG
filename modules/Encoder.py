@@ -4,17 +4,18 @@ import time
 import struct
 
 class encoder:
-    def __init__(self, queue_list = [], index_dim = 1, flex_dim = 5, emg_dim = 8, seq_length = 3):
+    def __init__(self, queue_list = [], index_dim = 1, flex_dim = 5, emg_dim = 8, seq_length = 3, emg_active_dim = 4):
         self.queue_list = queue_list
         self.dataSet = []
         self.count = 0
-        
+		
         self.emg_dim = emg_dim
         self.flex_dim = flex_dim
         self.index_dim = index_dim
-        self.data_dim =  emg_dim + flex_dim
+        self.data_dim =  emg_dim+flex_dim
         self.label_dim = flex_dim
         self.seq_length = seq_length
+        self.emg_active_dim = emg_active_dim
 
         self.tmp_I = 0
         self.tmp_E = []
