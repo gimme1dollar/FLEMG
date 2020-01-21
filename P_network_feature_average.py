@@ -1,9 +1,9 @@
-from modules import Sensor, Encoder, Processor, Analysis
+from _modules import Sensor, Encoder, Processor, Analysis
 import numpy as np
 from datetime import datetime
 import os
 dirname = os.path.dirname(__file__)
-filename = os.path.join(dirname, './data/prop_2020191942.csv')
+filename = os.path.join(dirname, './data/encode_8ch_202001091942.csv')
 now = datetime.now()
 
 #Feature variable setting
@@ -11,7 +11,7 @@ subject = "A"
 emg_dim = 8
 flex_dim = 5
 learning_rate = 0.01
-iteration = 3000
+iteration = 2000
 seq_length = 3
 input_dim = (emg_dim*2+flex_dim)*seq_length
 stack_dim = 2
