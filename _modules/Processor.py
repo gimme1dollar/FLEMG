@@ -34,7 +34,7 @@ class preprocessor:
 		np.savetxt(location, whole, fmt='%s', delimiter = delimiter)
 		print("Save End")
 
-	def scale(self, emg_max = 187500.016, flex_max = 1024):
+	def scale_tmp(self, emg_max = 187500.016, flex_max = 1024):
 		#w_e=emg_max/chunk
 		#e_f=emg_max/flex_max
 		#denominator = [1/w_e, e_f,e_f,e_f,e_f,e_f,e_f,e_f,e_f,chunk,chunk,chunk,chunk,chunk,chunk]

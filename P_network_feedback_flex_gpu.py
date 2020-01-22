@@ -12,14 +12,16 @@ now = datetime.now()
 subject = "A"
 emg_dim = 8
 flex_dim = 5
-learning_rate = 0.01
-iteration = 3000
-seq_length = 2 ** 6
+seq_length = 2 ** 8
 input_dim = (emg_dim + flex_dim) * seq_length
-stack_dim = 3
-hidden_dim = 300
-batch_size = 2 ** 9
 output_dim = emg_dim + flex_dim
+stack_dim = 2 ** 1
+hidden_dim = 2 ** 6
+learning_rate = 2 ** (-4)
+iteration = 2 ** 9
+batch_size = int(2 ** 11)
+print(f"Hidden_dim : {hidden_dim}\nStack_num : {stack_dim}")
+print(f"Learning_rate : {learning_rate}\nBatch_size : {batch_size}\nIteration : {iteration}\n")
 
 #
 print("Initiation")
@@ -30,7 +32,7 @@ print("Initiated\n")
 
 print("Data load")
 Preprocessor.load(filename)
-Preprocessor.scale()
+Preprocessor.scale_tmp()
 trainIndex, trainData, trainLabel = Preprocessor.preprocess_feedback_flex()
 trainLength = int(len(trainIndex) * 0.7)
 testIndex, testData, testLabel = trainIndex[trainLength:], trainData[trainLength:], trainLabel[trainLength:]

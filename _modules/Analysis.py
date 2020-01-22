@@ -19,7 +19,34 @@ class plotter:
         self.label = label
         self.index = index
         self.flex_dim = flex_dim
-    
+
+    def plot_encoded(self, subplot_row = 2, size = (20,10), figloc = './result/tmp'):
+        fig = plt.figure(num=1,figsize=size)
+        plt.figure(1)
+        #print(f"{self.index[:3, :, 0].reshape(-1)} \n{self.prediction[:3, 0]} \n{self.label[:3, 0]}")
+
+        for i in range(len(self.label[0])):
+            plt.subplot(subplot_row, int((len(self.label[0])+1)//subplot_row ), i+1)
+
+            if i< (len(self.label[0])-self.flex_dim):
+                plt.ylim([-20000,20000])
+            elif i>=(len(self.label[0])-self.flex_dim):
+                plt.ylim([0,500])
+
+            plt.xlabel("time(s)")
+            if i< (len(self.label[0])-self.flex_dim):
+                plt.plot(self.index[:], self.label[:,i],'r')
+            elif i>=(len(self.label[0])-self.flex_dim):
+                plt.plot(self.index[:], self.label[:,i],'b')
+
+            if i< (len(self.label[0])-self.flex_dim):
+                plt.title(f"emg ch {i+1}")
+            elif i>=(len(self.label[0])-self.flex_dim):
+                plt.title(f"flex order {i+1-(len(self.label[0])-self.flex_dim)}")
+        plt.suptitle(f"Model : {self.net}, Alpha : {self.learning_rate}, Iteration : {self.iteration}, Seq_length : {self.seq_length}, Stack_dim : {self.stack_dim}, Hidden_dim : {self.hidden_dim}, avgRMSE : {np.mean(self.rmse):0.3f}")
+        fig.savefig(figloc, dpi=fig.dpi)
+        plt.show()
+
     def plot_comparison(self, subplot_row = 2, size = (20,10), figloc = './result/tmp'):
         fig = plt.figure(num=1,figsize=size)
         plt.figure(1)
