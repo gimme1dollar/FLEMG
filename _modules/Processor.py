@@ -96,7 +96,7 @@ class preprocessor:
 
 		return self.index, self.data, self.label
 
-	def preprocess_feedback_whole(self, data = None):
+	def preprocess_feedback_all(self, data = None):
 		if data is not None:
 			self.raw = np.asarray(data)
 
@@ -352,17 +352,27 @@ class network_feedback_flex:
 		self.flag_kernel_opened = True
 		self.flag_placeholder = True
         
-	def train_network(self, training_data = [], training_label = [], iterations = 5000, location = 'model/_'):
+	def train_network(self, training_data = [], training_label = [], iterations = 5000, batch_size = 2**14, location = 'model/_'):
 		self.sess = tf.Session(graph=self.graph)
 		init = tf.global_variables_initializer()
 		self.sess.run(init)
 		self.loss_set=[]
+		self.batch_size = batch_size
+
 		# Training step
 		for i in range(iterations):
-			_, step_loss = self.sess.run([self.train, self.loss], feed_dict={self.X: training_data, self.Y: training_label})
-			self.loss_set.append(step_loss)
-			if(i % 1 == 0) :
-				print(f"[step: {i}] loss: {step_loss}")
+			batch_loss = 0
+			for idx in range( len(training_data)//self.batch_size ):
+				if idx+self.batch_size < len(training_data):
+					_, step_loss = self.sess.run([self.train, self.loss], feed_dict={self.X: training_data[idx:idx+self.batch_size], self.Y: training_label[idx:idx+self.batch_size]})
+					batch_loss += step_loss
+				else :
+					_, step_loss = self.sess.run([self.train, self.loss], feed_dict={self.X: training_data[idx:], self.Y: training_label[idx:]})
+					batch_loss += step_loss
+
+			self.loss_set.append(batch_loss)
+			print(f"[iter: {i}] loss: {batch_loss}")
+
 		#train_predict = self.sess.run(self.Y_pred, feed_dict={self.X: training_data})
     
 		# Save Network
@@ -389,7 +399,8 @@ class network_feedback_flex:
 			if idx == 0:
 				for j in range(self.data_encoder.label_dim):
 					for l in range(self.data_encoder.seq_length):
-						testSet[idx, l, self.data_encoder.emg_dim + j] = default_
+						pass
+						#testSet[idx, l, self.data_encoder.emg_dim + j] = default_
 						#testSet[idx, l, self.data_encoder.emg_dim + j] = random.random()
 			else:
 				for j in range(self.data_encoder.label_dim):
@@ -402,8 +413,9 @@ class network_feedback_flex:
 			# Feed testData
 			#print(f"{idx} test\n{testSet[idx,:,8:]}\n")
 			test_predict = self.sess.run(self.Y_pred, feed_dict= {self.X: [testSet[idx]]})
-			#print(f"{idx} pred\n{test_predict[0]}\n\n")
 			prediction.append(test_predict[0])
+			if idx % 100 == 0 :
+				print(f"{idx}/{len(testSet)} pred : {test_predict[0]}")
 		
 		# Calculate RMSE	
 		if testLabel is not None:
@@ -411,7 +423,6 @@ class network_feedback_flex:
 			print(f"RMSE: {rmse_val}\n")
 			return prediction, rmse_val
 		return prediction
-
 
 
 	def close(self):
@@ -474,12 +485,21 @@ class network_feedback_all:
 		self.sess.run(init)
 		self.loss_set=[]
 
+		self.batch_size = 2 ** 14
+
 		# Training step
 		for i in range(iterations):
-			_, step_loss = self.sess.run([self.train, self.loss], feed_dict={self.X: training_data, self.Y: training_label})
+			for idx in range(len(training_data) // self.batch_size):
+				if idx + self.batch_size < len(training_data):
+					_, step_loss = self.sess.run([self.train, self.loss],
+												 feed_dict={self.X: training_data[idx:idx + self.batch_size],
+															self.Y: training_label[idx:idx + self.batch_size]})
+				else:
+					_, step_loss = self.sess.run([self.train, self.loss], feed_dict={self.X: training_data[idx:],
+																					 self.Y: training_label[idx:]})
+
 			self.loss_set.append(step_loss)
-			if(i) :
-				print(f"[step: {i}] loss: {step_loss}")
+			print(f"[iter: {i}] loss: {step_loss}")
 		
 		#train_predict = self.sess.run(self.Y_pred, feed_dict={self.X: training_data})
 
@@ -505,20 +525,22 @@ class network_feedback_all:
 		for idx in range( len(testSet) ):
 			# testSet Reconstruction
 			if idx == 0:
-				for j in range(self.data_encoder.emg_dim + self.data_encoder.label_dim):
-					for l in range(self.data_encoder.seq_length):
-						testSet[idx, l, j] = default_
+				for l in range(self.data_encoder.seq_length):
+					for j in range(self.data_encoder.emg_dim + self.data_encoder.label_dim):
+						testSet[idx, l, self.data_encoder.emg_dim + j] = default_
 						#testSet[idx, l, self.data_encoder.emg_dim + j] = random.random()
 			else:
-				for j in range(self.data_encoder.emg_dim + self.data_encoder.label_dim):
-					for l in range(self.data_encoder.seq_length):
+				for l in range(self.data_encoder.seq_length):
+					for j in range(self.data_encoder.emg_dim + self.data_encoder.label_dim):
 						if l == self.data_encoder.seq_length - 1:
-							testSet[idx, l, j] = test_predict[0][j]
+							testSet[idx, l, self.data_encoder.emg_dim + j] = test_predict[0][j]
 						else:
-							testSet[idx, l, j] = testSet[idx-1, l+1, j]
+							testSet[idx, l, self.data_encoder.emg_dim + j] = testSet[idx-1, l+1, self.data_encoder.emg_dim + j]
 
 			# Feed testData
+			print(f"{idx} test\n{testSet[idx,:,8:]}\n")
 			test_predict = self.sess.run(self.Y_pred, feed_dict= {self.X: [testSet[idx]]})
+			print(f"{idx} pred\n{test_predict[0]}\n\n")
 			prediction.append(test_predict[0])
 
         # Calculate RMSE

@@ -4,7 +4,7 @@ from datetime import datetime
 import os
 
 dirname = os.path.dirname(__file__)
-filename = os.path.join(dirname, './data/tmp_202001091942.csv')
+filename = os.path.join(dirname, './data/encode_8ch_202001091942.csv')
 now = datetime.now()
 
 #Feature variable setting
@@ -16,16 +16,16 @@ iteration = 2000
 seq_length = 3
 input_dim = (emg_dim*2+flex_dim)*seq_length
 stack_dim = 2
-hidden_dim = 30
+hidden_dim = 100
 output_dim = emg_dim+flex_dim
 #
 Encoder = Encoder.encoder(emg_dim = emg_dim ,flex_dim = flex_dim)
 Preprocessor = Processor.preprocessor()
-Network = Processor.network_feedback_whole()
+Network = Processor.network_feedback_all()
 
 Preprocessor.load(filename)
 Preprocessor.scale()
-trainIndex, trainData, trainLabel = Preprocessor.preprocess_feedback_whole()
+trainIndex, trainData, trainLabel = Preprocessor.preprocess_feedback_all()
 trainLength = int(len(trainIndex) * 0.7)
 testIndex, testData, testLabel = trainIndex[trainLength:], trainData[trainLength:], trainLabel[trainLength:]
 trainIndex, trainData, trainLabel = trainIndex[:trainLength], trainData[:trainLength], trainLabel[:trainLength]

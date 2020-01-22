@@ -11,24 +11,28 @@ subject = "A"
 emg_dim = 8
 flex_dim = 5
 learning_rate = 0.01
-iteration = 100
+iteration = 2000
 seq_length = 3
 input_dim = (emg_dim+flex_dim)*seq_length
-stack_dim = 2
-hidden_dim = 30
+stack_dim = 3
+hidden_dim = 300
 output_dim = emg_dim+flex_dim
 
 #
+print("Initiation")
 Encoder = Encoder.encoder(emg_dim = emg_dim ,flex_dim = flex_dim, seq_length = seq_length)
 Preprocessor = Processor.preprocessor(en = Encoder)
 Network = Processor.network_feedback_flex(data_encoder = Encoder)
+print("Initiated\n")
 
+print("Data load")
 Preprocessor.load(filename)
 Preprocessor.scale()
 trainIndex, trainData, trainLabel = Preprocessor.preprocess_feedback_flex()
 trainLength = int(len(trainIndex) * 0.7)
 testIndex, testData, testLabel = trainIndex[trainLength:], trainData[trainLength:], trainLabel[trainLength:]
 trainIndex, trainData, trainLabel = trainIndex[:trainLength], trainData[:trainLength], trainLabel[:trainLength]
+print("Data loaded\n")
 
 print(f"Index example: {trainIndex[0].reshape(-1)}\n"
       f"Data example: {trainData[0]} \n"

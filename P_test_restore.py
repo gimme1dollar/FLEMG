@@ -61,7 +61,7 @@ with Network.graph.as_default():
             print("Directory ", model_dir, " already exists\n")
     model_dir = model_dir + '/' + model_name
 
-    model_time = "20200121_1801"
+    model_time = "20200121_1925"
     restore_name = f"model/{Network.__class__.__name__}/{subject}/{model_time}"
     Network.restore(restore_name)
     print(f"Network {restore_name} Restored\n")
