@@ -1,0 +1,3 @@
+model_checkpoint_path: "lstm.ckpt-7"
+all_model_checkpoint_paths: "lstm.ckpt-0"
+all_model_checkpoint_paths: "lstm.ckpt-7"

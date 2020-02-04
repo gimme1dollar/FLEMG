@@ -19,7 +19,7 @@ import tensorflow as tf
 now = datetime.now()
 notebook_path_name = '.'
 
-subject_name = "YHyu"
+subject_name = "JYLee"
 network_name = "Network_default_feature_average"
 time_name = now.strftime("%Y%m%d_%H%M")    
 model_name = notebook_path_name + '/model/' + network_name
@@ -83,11 +83,11 @@ class encoder:
         self.tmp_E = []
         self.tmp_F = []
 
-subject_name = "YHyu"
+subject_name = "JYLee"
 subject_dir = notebook_path_name + '/data/' + subject_name
 target_dir = subject_dir
-training_name = "20200129_2127_encode"
-testing_name = "20200129_2201_encode"
+training_name = "20200203_1821_encode"
+testing_name = "20200203_1826_encode"
 training_file = target_dir + "/"+training_name + ".csv"
 testing_file = target_dir + "/"+testing_name + ".csv"
 
@@ -203,21 +203,34 @@ class scaler:
         self.label = []
         self.index = []
 
-    def scale(self, data=None, emg_max=187500.016, flex_max=1024, feature_num=5):
+    def scale(self, data=None, emg_max=1500, flex_max=1024, feature_num=5):
         if data is not None:
             self.raw = np.asarray(data)
-        emg_max = 500
+
         # scale EMG raw data
-        self.raw[:, self.encoder.index_dim:self.encoder.index_dim + self.encoder.emg_dim]=np.absolute(self.raw[:, self.encoder.index_dim:self.encoder.index_dim + self.encoder.emg_dim ])
-        self.raw[:, self.encoder.index_dim:self.encoder.index_dim + self.encoder.emg_dim ]= self.raw[:, self.encoder.index_dim:self.encoder.index_dim + self.encoder.emg_dim ]/emg_max
-        self.raw[:, self.encoder.index_dim + self.encoder.emg_active_dim:self.encoder.index_dim + self.encoder.emg_dim]=0
-        # self.raw[:,self.encoder.index_dim:self.encoder.index_dim+self.encoder.emg_dim]=(self.raw[:,self.encoder.index_dim:self.encoder.index_dim+self.encoder.emg_dim]--0.08)/(0.08--0.08)
+        emg_start_idx = 1
+        for i in range(self.encoder.emg_dim):
+            self.raw[:, emg_start_idx + i] = self.raw[:, emg_start_idx + i] / emg_max
+            self.raw[:, emg_start_idx + i] = self.raw[:, emg_start_idx + i] * 256
+            for j in range(len(self.raw[:, 1 + i])):
+                self.raw[j, emg_start_idx + i] = int(self.raw[j, emg_start_idx + i])
+                if self.raw[j, emg_start_idx + i] < -128:
+                    self.raw[j, emg_start_idx + i] = -128
+                elif self.raw[j, emg_start_idx + i] > 128:
+                    self.raw[j, emg_start_idx + i] = 128
+            self.raw[:, emg_start_idx + i] = (self.raw[:, emg_start_idx + i] + 128) / 256
 
         # scale Flex-sensor data
         flex_start_idx = 1 + self.encoder.emg_dim
-        self.raw[:, flex_start_idx:]=np.absolute(self.raw[:, flex_start_idx:])
-        self.raw[:, flex_start_idx:] /= flex_max
-        self.raw[:, flex_start_idx:] = (self.raw[:, flex_start_idx:] - 0.15) / (0.4 - 0.15)
+        for i in range(self.encoder.flex_dim):
+            if i == 0:
+                self.raw[:, flex_start_idx + i] = np.absolute(self.raw[:, flex_start_idx + i])
+                self.raw[:, flex_start_idx + i] /= flex_max
+                self.raw[:, flex_start_idx + i] = (self.raw[:, flex_start_idx + i] - 0.15) / (0.35 - 0.15)
+            else:
+                self.raw[:, flex_start_idx + i] = np.absolute(self.raw[:, flex_start_idx + i])
+                self.raw[:, flex_start_idx + i] /= flex_max
+                self.raw[:, flex_start_idx + i] = (self.raw[:, flex_start_idx + i] - 0.15) / (0.4 - 0.15)
 
 
 SC = scaler(en=EC)
@@ -400,10 +413,13 @@ class network_default_feature_average:
 
         self.loss_set=[]
         self.batch_size = batch_size
+        self.saver = tf.train.Saver()
 
         # Training step
         for i in range(iterations):
             batch_loss = 0
+
+            idx = 0
             for idx in range( len(training_data)//self.batch_size ):
                 _, step_loss = self.sess.run([self.train, self.loss], feed_dict={self.X: training_data[(idx) * batch_size:(idx + 1) * batch_size], self.Y: training_label[(idx) * batch_size:(idx + 1) * batch_size]})
                 batch_loss += step_loss
@@ -413,12 +429,14 @@ class network_default_feature_average:
             self.loss_set.append(batch_loss)
 
             print(f"[iter: {i}/{iterations}] loss: {batch_loss}")
-        #train_predict = self.sess.run(self.Y_pred, feed_dict={self.X: training_data})
 
-        # Save Network
-        self.saver = tf.train.Saver()
-        #location = location + "(" + str(self.stack_dim) + ")"
-        self.saver.save(self.sess, location+"/lstm.ckpt")
+            # Save Network
+            if i % 30 == 0:
+                self.saver.save(self.sess, location + "/lstm.ckpt", i)
+                print(f"[iter: {i}/{iterations}] Model saved at {location}")
+        self.saver.save(self.sess, location + "/lstm.ckpt", i)
+        print(f"[iter: {i}/{iterations}] Model saved at {location}")
+
         return self.loss_set
 
     def restore(self, location='model/_'):
@@ -434,15 +452,21 @@ class network_default_feature_average:
 
     def infer(self, testSet = [], testLabel = None, batch_size = 2**9, default_ = 0.39):
         prediction = []
-        # Training step
-        for idx in range( len(testSet)//batch_size ):
-            test_predict = self.sess.run(self.Y_pred, feed_dict={self.X: testSet[(idx)*batch_size:(idx+1)*batch_size]})
-            if idx == 0:
-                prediction = test_predict
-            else:
-                prediction = np.vstack((prediction, test_predict))
-        test_predict = self.sess.run(self.Y_pred, feed_dict={self.X: testSet[(idx+1)*batch_size:]})
-        prediction = np.vstack((prediction, test_predict))
+
+        # Inference with batch
+        if len(testSet) < batch_size :
+            prediction = self.sess.run(self.Y_pred, feed_dict={self.X: testSet[:]})
+        else :
+            idx = 0
+            for idx in range( len(testSet)//batch_size ):
+                test_predict = self.sess.run(self.Y_pred, feed_dict={self.X: testSet[(idx)*batch_size:(idx+1)*batch_size]})
+
+                if idx == 0:
+                    prediction = test_predict
+                else:
+                    prediction = np.vstack((prediction, test_predict))
+            test_predict = self.sess.run(self.Y_pred, feed_dict={self.X: testSet[(idx+1)*batch_size:]})
+            prediction = np.vstack((prediction, test_predict))
 
         # Calculate RMSE
         print("Calculating RMSE")
@@ -499,9 +523,9 @@ print(f"Data example: {testData[0]} \nLabel example: {testLabel[0]}\n")
 subject = subject_name
 seq_length = seq_length
 
-learning_rate = 2**(-4)
-iteration = 2**8
-batch_size = 2**9
+learning_rate = 2**(-10)
+iteration = 2**11
+batch_size = 2**10
 
 stack_dim = 2
 #stack_dim : the number of layer of LSTM cells
