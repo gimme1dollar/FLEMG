@@ -333,7 +333,7 @@ with Network.graph.as_default():
     Network.restore(location=model_name+"/YHyu/20200204_0019")
 
     print("Model Training\n")
-    loss=Network.train_network(training_data = trainData, training_label = trainLabel,iterations = iteration, batch_size = batch_size, save_checkpoint = save_checkpoint, location = model_dir, restore=False)
+    loss=Network.train_network(training_data = trainData, training_label = trainLabel,iterations = iteration, batch_size = batch_size, save_checkpoint = save_checkpoint, location = model_dir, restore=True)
 
     print("Model " + model_name + " saved\n")
 

@@ -19,8 +19,8 @@ import tensorflow as tf
 now = datetime.now()
 notebook_path_name = '.'
 
-subject_name = "JMKim"
-network_name = "Network_feedback_flex_feature_average_Prediction"
+subject_name = "YHyu"
+network_name = "Network_feedback_flex_prediction_feature_average"
 time_name = now.strftime("%Y%m%d_%H%M")
 model_name = notebook_path_name + '/model/' + network_name
 
@@ -75,13 +75,8 @@ fig_dir = subject_dir
 
 subject_dir = notebook_path_name + '/data/' + subject_name
 target_dir = subject_dir
-training_name = "20200205_1729_feature"
-testing_name = "20200205_1729_feature"
-'''
-YHyu
-training_name = "20200129_2127_encode"
-testing_name = "20200129_2201_encode"
-'''
+training_name = "20200129_2127_feature"
+testing_name = "20200129_2201_feature"
 training_file = target_dir + "/"+training_name + ".csv"
 testing_file = target_dir + "/"+testing_name + ".csv"
 
@@ -191,7 +186,7 @@ print(f"Test Data example: {testData[0]} \nLabel example: {testLabel[0]}\n")
 
 
 
-class network_feedback_flex_feature_average:
+class network_feedback_flex_prediction_feature_average:
     def __init__(self, data_encoder = encoder()):
         tf.set_random_seed(777)  # reproducibility
         self.data_encoder = data_encoder
@@ -387,19 +382,15 @@ subject = subject_name
 seq_length = seq_length
 
 learning_rate = 2**(-10)
-iteration = 2**4
+iteration = 2**11
 batch_size = 2**10
-training_data_changing_iter_size = 2**3
-save_checkpoint = 2**2
+training_data_changing_iter_size = 2**7
+save_checkpoint = 2**5
 
-stack_dim = 2
-#stack_dim : the number of layer of LSTM cells
-hidden_dim = 3
-#hidden_dim : the number of units in the LSTM cell
-input_dim = (emg_dim*3+flex_dim)*seq_length
-output_dim = flex_dim
+stack_dim = 2   #stack_dim : the number of layer of LSTM cells
+hidden_dim = 300   #hidden_dim : the number of units in the LSTM cell
 
-Network = network_feedback_flex_feature_average(data_encoder=EC_WB)
+Network = network_feedback_flex_prediction_feature_average(data_encoder=EC_WB)
 
 
 
