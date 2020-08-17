@@ -15,7 +15,8 @@ Attempt to learn correlation between 'EMG data : FLEX data' that can be consdier
 ## Result
 
 Follow Up Test 
-![20200617_2248_test](https://user-images.githubusercontent.com/20160685/88039995-3f37d780-cb83-11ea-876c-8bc9139aad7a.png)
+![20200401_1456_test](https://user-images.githubusercontent.com/20160685/90386051-f4947700-e0be-11ea-9609-14d452473d40.png)
 
-With FLEX Feedback Test
-![20200525_1335_test](https://user-images.githubusercontent.com/20160685/88040513-f7fe1680-cb83-11ea-8efa-28917fad25de.png)
+With FLEX Feedback Test (Not Wroking Properly...)
+![20200501_2150_test](https://user-images.githubusercontent.com/20160685/90386402-7be1ea80-e0bf-11ea-89eb-4f00d7528208.png)
+
