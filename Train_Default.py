@@ -75,8 +75,8 @@ fig_dir = subject_dir
 
 subject_dir = notebook_path_name + '/data/' + subject_name
 target_dir = subject_dir
-training_name = "20200129_2127_feature"
-testing_name = "20200129_2201_feature"
+training_name = "20200129_2127_scale"
+testing_name = "20200129_2201_scale"
 training_file = target_dir + "/"+training_name + ".csv"
 testing_file = target_dir + "/"+testing_name + ".csv"
 
@@ -173,8 +173,7 @@ DL_data = DL.raw
 testIndex, testData, testLabel = WB.preprocess_default_feature_average(data=DL_data)
 #print(f"Index example: {testIndex[0].reshape(-1)}\nData example: {testData[0]} \nLabel example: {testLabel[0]}\n")
 print(f"Test Data example: {testData[0]} \nLabel example: {testLabel[0]}\n")
-
-
+print(f"Noise Training Data example: {trainData[0]}\nLabel example: {trainLabel[0]}\n")
 
 
 ### Network
@@ -214,7 +213,8 @@ class network_default_feature_average:
 
         # Cost & Loss & Optimizer
         self.loss = tf.reduce_sum(tf.square(self.Y_pred - self.Y))  # sum of the squares
-        self.optimizer = tf.train.AdamOptimizer(self.learning_rate)
+        #self.optimizer = tf.train.AdamOptimizer(self.learning_rate)
+        self.optimizer = tf.train.AdamOptimizer(self.learning_rate,beta1=0.85)
         self.train = self.optimizer.minimize(self.loss)
 
         # RMSE
@@ -239,16 +239,18 @@ class network_default_feature_average:
         self.loss_set=[]
         self.batch_size = batch_size
         self.saver = tf.train.Saver()
-
         # Training step
         for i in range(iterations):
             batch_loss = 0
 
             idx = 0
             for idx in range( len(training_data)//self.batch_size ):
-                _, step_loss = self.sess.run([self.train, self.loss], feed_dict={self.X: training_data[(idx) * batch_size:(idx + 1) * batch_size], self.Y: training_label[(idx) * batch_size:(idx + 1) * batch_size]})
+                noise = np.absolute(np.random.normal(0, 0.01, training_data[(idx) * batch_size:(idx + 1) * batch_size].shape))
+                _, step_loss = self.sess.run([self.train, self.loss], feed_dict={self.X: training_data[(idx) * batch_size:(idx + 1) * batch_size]+noise, self.Y: training_label[(idx) * batch_size:(idx + 1) * batch_size]})
                 batch_loss += step_loss
-            _, step_loss = self.sess.run([self.train, self.loss], feed_dict={self.X: training_data[(idx + 1) * batch_size:], self.Y: training_label[(idx + 1) * batch_size:]})
+            noise = np.absolute(
+                np.random.normal(0, 0.01, training_data[(idx + 1) * batch_size:].shape))
+            _, step_loss = self.sess.run([self.train, self.loss], feed_dict={self.X: training_data[(idx + 1) * batch_size:]+noise, self.Y: training_label[(idx + 1) * batch_size:]})
             batch_loss += step_loss
 
             self.loss_set.append(batch_loss)
@@ -280,6 +282,7 @@ class network_default_feature_average:
     def infer(self, testSet = [], testLabel = None, batch_size = 2**9, default_ = 0.39):
         prediction = []
 
+
         # Inference with batch
         if len(testSet) < batch_size :
             prediction = self.sess.run(self.Y_pred, feed_dict={self.X: testSet[:]})
@@ -296,8 +299,9 @@ class network_default_feature_average:
             prediction = np.vstack((prediction, test_predict))
 
         # Calculate RMSE
-        print("Calculating RMSE")
+
         if testLabel is not None:
+            print("Calculating RMSE")
             rmse_val = self.sess.run(self.rmse, feed_dict={self.targets: testLabel, self.predictions: prediction})
             print(f"RMSE: {rmse_val}\n")
             return prediction, rmse_val
@@ -313,12 +317,12 @@ subject = subject_name
 seq_length = seq_length
 
 learning_rate = 2**(-10)
-iteration = 2**9
+iteration = 200
 batch_size = 2**10
 save_checkpoint = 2**5
 
 stack_dim = 2 #stack_dim : the number of layer of LSTM cells
-hidden_dim = 300 #hidden_dim : the number of units in the LSTM cell
+hidden_dim = 100 #hidden_dim : the number of units in the LSTM cell
 
 Network = network_default_feature_average(data_encoder=EC_WB)
 
@@ -330,14 +334,14 @@ with Network.graph.as_default():
     Network.construct_placeholders(learning_rate=learning_rate, hidden_dim=hidden_dim, stack_dim=stack_dim)
 
     print("Model Restoring\n")
-    Network.restore(location=model_name+"/YHyu/20200204_0019")
+    Network.restore(location=model_name+"/YHyu/20200611_1646")
 
     print("Model Training\n")
     loss=Network.train_network(training_data = trainData, training_label = trainLabel,iterations = iteration, batch_size = batch_size, save_checkpoint = save_checkpoint, location = model_dir, restore=True)
 
     print("Model " + model_name + " saved\n")
 
-    prediction, rmse_val = Network.infer(testData, testLabel)
+    prediction, rmse_val = Network.infer(testSet=testData, testLabel=testLabel, batch_size=batch_size)
 
 
 
@@ -393,7 +397,9 @@ class plotter:
                 plt.title(f"flex order {i+1-(len(self.label[0])-self.flex_dim)}")
         plt.suptitle(f"Training : {self.training_name}, Testing : {self.testing_name}, Model : {self.net}, Alpha : {self.learning_rate}, Iteration : {self.iteration}, Seq_length : {self.seq_length}, Stack_dim : {self.stack_dim}, Hidden_dim : {self.hidden_dim}, avgRMSE : {np.mean(self.rmse):0.3f}")
         fig.savefig(figloc, dpi=fig.dpi)
+        plt.ion()
         plt.show()
+        plt.pause(1)
 
     def plot_comparison(self, subplot_row = 2, size = (20,10), figloc = './result/tmp'):
         fig = plt.figure(num=6,figsize=size)
@@ -410,14 +416,18 @@ class plotter:
                 plt.title(f"flex order {i+1-(len(self.label[0])-self.flex_dim)},rmse {self.rmse[i]:0.3f}")
         plt.suptitle(f"Model : {self.net}, Alpha : {self.learning_rate}, Iteration : {self.iteration}, Seq_length : {self.seq_length}, Stack_dim : {self.stack_dim}, Hidden_dim : {self.hidden_dim}, avgRMSE : {np.mean(self.rmse):0.3f}")
         fig.savefig(figloc, dpi=fig.dpi)
+        plt.ion()
         plt.show()
+        plt.pause(1)
 
     def plot_rmse(self, subplot_row = 2, size = (20,10), figloc = './result/tmp'):
         fig = plt.figure(num=7,figsize=size)
         plt.figure(7)
 
         fig.savefig(figloc, dpi=fig.dpi)
+        plt.ion()
         plt.show()
+        plt.pause(1)
 
     def plot_training_graph(self, loss=[], iteration=5000, size=(20,10), figloc = './result'):
         step=list(range(iteration))
@@ -429,7 +439,9 @@ class plotter:
         plt.ylabel("loss")
         plt.plot(step,loss)
         fig.savefig(figloc, dpi=fig.dpi)
+        plt.ion()
         plt.show()
+        plt.pause(1)
 
 p = plotter(training_name,testing_name,"network_default_feature_average",learning_rate=learning_rate,iteration=iteration, seq_length=seq_length, stack_dim=stack_dim, hidden_dim=hidden_dim, rmse=rmse_val,prediction=np.asarray(prediction),label=testLabel, index=testIndex, flex_dim=flex_dim)
 

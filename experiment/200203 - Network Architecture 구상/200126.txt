@@ -1,0 +1,38 @@
+
+1) network_default_feature_average
+
+
+2) network_default_features
+
+
+3) network_feedback_flex_feature_average
+
+4) network_feedback_flex_features
+
+
+5) network_feedback_all_feature_average
+
+
+6) network_feedback_all_features
+
+
+7) network_multiple_no_feature
+
+
+8) network_multiple_features
+
+
+9) network_two_no_feature
+
+
+10) network_two_features
+
+
+
+
+
+A) 선행 논문과 비교
+1 vs. 3 vs. 5
+
+B) More Variations
+2 vs. 4 vs. 6 vs. 8 vs. 10

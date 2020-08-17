@@ -1,5 +1,0 @@
-model_checkpoint_path: "lstm.ckpt-127"
-all_model_checkpoint_paths: "lstm.ckpt-32"
-all_model_checkpoint_paths: "lstm.ckpt-64"
-all_model_checkpoint_paths: "lstm.ckpt-96"
-all_model_checkpoint_paths: "lstm.ckpt-127"

@@ -1,0 +1,8 @@
+기존에 input으로 넣는raw emg 데이터에 평균이0이고 standard deviation이 0.01인 노이즈를 더해,
+논문followup실험을 진행한 결과.
+작은 노이즈를 첨가해 학습하는 경우, 
+적은 데이터셋으로도 뉴럴네트워크를 generalize하게 학습시킬 수 있고
+뉴럴네트워크가 노이즈에 강해진다는 것을 참고하여 진행한 실험이다.
+
+reference : https://machinelearningmastery.com/train-neural-networks-with-noise-to-reduce-overfitting/
+reference : https://towardsdatascience.com/how-to-use-noise-to-your-advantage-5301071d9dc3

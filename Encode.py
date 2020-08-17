@@ -59,43 +59,46 @@ class plotter:
         #print(f"{self.index[:3, :, 0].reshape(-1)} \n{self.prediction[:3, 0]} \n{self.label[:3, 0]}")
 
         for i in range(len(self.label[0])):
-            plt.subplot(subplot_row, int((len(self.label[0])+1)//subplot_row ), i+1)
+            plt.subplot(subplot_row, int((len(self.label[0])+1)/subplot_row ), i+1)
 
             if i>=(len(self.label[0])-self.flex_dim):
                 plt.ylim([0,500])
 
             plt.xlabel("time(s)")
             if i< (len(self.label[0])-self.flex_dim):
-                plt.plot(self.index[:], self.label[:,i],'r')
+                plt.plot(self.index[:], self.label[:,i],'r',linewidth=0.5)
             elif i>=(len(self.label[0])-self.flex_dim):
-                plt.plot(self.index[:], self.label[:,i],'b')
+                plt.plot(self.index[:], self.label[:,i],'b',linewidth=0.5)
 
             if i< (len(self.label[0])-self.flex_dim):
                 plt.title(f"emg ch {i+1}")
             elif i>=(len(self.label[0])-self.flex_dim):
                 plt.title(f"flex order {i+1-(len(self.label[0])-self.flex_dim)}")
         plt.suptitle(f"Model : {self.net}, Alpha : {self.learning_rate}, Iteration : {self.iteration}, Seq_length : {self.seq_length}, Stack_dim : {self.stack_dim}, Hidden_dim : {self.hidden_dim}, avgRMSE : {np.mean(self.rmse):0.3f}")
+        plt.ion()
+        plt.show()
+        plt.pause(1)
         fig.savefig(figloc, dpi=fig.dpi)
-        #plt.show()
+
 
     def plot_filtered(self, subplot_row=2, size=(20, 10), figloc='./result/tmp'):
-        fig = plt.figure(num=1, figsize=size)
-        plt.figure(1)
+        fig = plt.figure(num=2, figsize=size)
+        plt.figure(2)
         # print(f"{self.index[:3, :, 0].reshape(-1)} \n{self.prediction[:3, 0]} \n{self.label[:3, 0]}")
 
         for i in range(len(self.label[0])):
-            plt.subplot(subplot_row, int((len(self.label[0]) + 1) // subplot_row), i + 1)
+            plt.subplot(subplot_row, int((len(self.label[0]) + 1) / subplot_row), i + 1)
 
             if i < (len(self.label[0]) - self.flex_dim):
-                plt.ylim([-300, 300])
+                plt.ylim([-1500, 1500])
             elif i >= (len(self.label[0]) - self.flex_dim):
                 plt.ylim([0, 500])
 
             plt.xlabel("time(s)")
             if i < (len(self.label[0]) - self.flex_dim):
-                plt.plot(self.index[:], self.label[:, i], 'r')
+                plt.plot(self.index[:], self.label[:, i], 'r',linewidth=0.5)
             elif i >= (len(self.label[0]) - self.flex_dim):
-                plt.plot(self.index[:], self.label[:, i], 'b')
+                plt.plot(self.index[:], self.label[:, i], 'b',linewidth=0.5)
 
             if i < (len(self.label[0]) - self.flex_dim):
                 plt.title(f"emg ch {i + 1}")
@@ -103,27 +106,32 @@ class plotter:
                 plt.title(f"flex order {i + 1 - (len(self.label[0]) - self.flex_dim)}")
         plt.suptitle(
             f"Model : {self.net}, Alpha : {self.learning_rate}, Iteration : {self.iteration}, Seq_length : {self.seq_length}, Stack_dim : {self.stack_dim}, Hidden_dim : {self.hidden_dim}, avgRMSE : {np.mean(self.rmse):0.3f}")
+        plt.ion()
+        plt.show()
+        plt.pause(1)
         fig.savefig(figloc, dpi=fig.dpi)
-        #plt.show()
+
 
     def plot_scaled(self, subplot_row=2, size=(20, 10), figloc='./result/tmp'):
-        fig = plt.figure(num=1, figsize=size)
-        plt.figure(1)
+        fig = plt.figure(num=3, figsize=size)
+        plt.figure(3)
         # print(f"{self.index[:3, :, 0].reshape(-1)} \n{self.prediction[:3, 0]} \n{self.label[:3, 0]}")
 
         for i in range(len(self.label[0])):
-            plt.subplot(subplot_row, int((len(self.label[0]) + 1) // subplot_row), i + 1)
+            plt.subplot(subplot_row, int((len(self.label[0]) + 1) / subplot_row), i + 1)
 
             if i < (len(self.label[0]) - self.flex_dim):
                 plt.ylim([0, 1])
+                pass
             elif i >= (len(self.label[0]) - self.flex_dim):
                 plt.ylim([0, 1])
+                pass
 
             plt.xlabel("time(s)")
             if i < (len(self.label[0]) - self.flex_dim):
-                plt.plot(self.index[:], self.label[:, i], 'r')
+                plt.plot(self.index[:], self.label[:, i], 'r',linewidth=0.5)
             elif i >= (len(self.label[0]) - self.flex_dim):
-                plt.plot(self.index[:], self.label[:, i], 'b')
+                plt.plot(self.index[:], self.label[:, i], 'b',linewidth=0.5)
 
             if i < (len(self.label[0]) - self.flex_dim):
                 plt.title(f"emg ch {i + 1}")
@@ -131,8 +139,42 @@ class plotter:
                 plt.title(f"flex order {i + 1 - (len(self.label[0]) - self.flex_dim)}")
         plt.suptitle(
             f"Model : {self.net}, Alpha : {self.learning_rate}, Iteration : {self.iteration}, Seq_length : {self.seq_length}, Stack_dim : {self.stack_dim}, Hidden_dim : {self.hidden_dim}, avgRMSE : {np.mean(self.rmse):0.3f}")
+        plt.ion()
+        plt.show()
+        plt.pause(1)
         fig.savefig(figloc, dpi=fig.dpi)
-        #plt.show()
+
+    def plot_featured(self, subplot_row=2, size=(20, 10), figloc='./result/tmp'):
+        fig = plt.figure(num=4, figsize=size)
+        plt.figure(4)
+        # print(f"{self.index[:3, :, 0].reshape(-1)} \n{self.prediction[:3, 0]} \n{self.label[:3, 0]}")
+
+        for i in range(len(self.label[0])):
+            plt.subplot(subplot_row, int((len(self.label[0]) + 1) / subplot_row), i + 1)
+
+            if i < (len(self.label[0]) - self.flex_dim):
+                #plt.ylim([0, 1])
+                pass
+            elif i >= (len(self.label[0]) - self.flex_dim):
+                #plt.ylim([0, 1])
+                pass
+
+            plt.xlabel("time(s)")
+            if i < (len(self.label[0]) - self.flex_dim):
+                plt.plot(self.index[:], self.label[:, i], 'r',linewidth=0.5)
+            elif i >= (len(self.label[0]) - self.flex_dim):
+                plt.plot(self.index[:], self.label[:, i], 'b',linewidth=0.5)
+
+            if i < (len(self.label[0]) - self.flex_dim):
+                plt.title(f"emg ch {i + 1}")
+            elif i >= (len(self.label[0]) - self.flex_dim):
+                plt.title(f"flex order {i + 1 - (len(self.label[0]) - self.flex_dim)}")
+        plt.suptitle(
+            f"Model : {self.net}, Alpha : {self.learning_rate}, Iteration : {self.iteration}, Seq_length : {self.seq_length}, Stack_dim : {self.stack_dim}, Hidden_dim : {self.hidden_dim}, avgRMSE : {np.mean(self.rmse):0.3f}")
+        plt.ion()
+        plt.show()
+        plt.pause(1)
+        fig.savefig(figloc, dpi=fig.dpi)
 
 
 emg_dim = 8
@@ -379,13 +421,13 @@ if True:
             self.label = []
             self.index = []
 
-        def butter_highpass(self, cutoff, fs, order=5):
+        def butter_highpass(self, cutoff, fs, order=4):
             nyq = 0.5 * fs
             normal_cutoff = cutoff / nyq
             b, a = signal.butter(order, normal_cutoff, btype='high', analog=False)
             return b, a
 
-        def butter_highpass_filter(self, data, cutoff, fs, order=5):
+        def butter_highpass_filter(self, data, cutoff, fs, order=4):
             b, a = self.butter_highpass(cutoff, fs, order=order)
             y = signal.filtfilt(b, a, data)
             return y
@@ -425,6 +467,7 @@ if True:
     print("CSV Saved")
 
     ### Figure
+    print("filtered label : " + str(len(filtered_data[:, 1:][0])))
     p = plotter("Data_Collector", label=filtered_data[:, 1:], index=filtered_data[:, 0], flex_dim=5)
 
     # Save Figure
@@ -432,81 +475,6 @@ if True:
     train_fig_dir = fig_dir + '/' + train_fig_name
     p.plot_filtered(figloc=train_fig_dir)
     print("Figure " + train_fig_name + " saved\n")
-
-
-
-
-
-    # Scaler
-    class Scaler:
-        def __init__(self, en=encoder(), raw=[]):
-            self.raw = raw
-            self.encoder = en
-            self.data = []
-            self.label = []
-            self.index = []
-
-        def scale(self, data=None, emg_max=1500, flex_max=1024, feature_num=5):
-            if data is not None:
-                self.raw = np.asarray(data)
-
-
-            # scale EMG raw data
-            emg_start_idx = 1
-            for i in range(self.encoder.emg_dim):
-                self.raw[:, emg_start_idx + i] = self.raw[:, emg_start_idx + i] / emg_max
-                self.raw[:, emg_start_idx + i] = self.raw[:, emg_start_idx + i] * 256
-                for j in range( len(self.raw[:,1+i]) ):
-                    self.raw[j, emg_start_idx+i] = int(self.raw[j, emg_start_idx+i])
-                    if self.raw[j, emg_start_idx+i] < -128 :
-                        self.raw[j, emg_start_idx + i] = -128
-                    elif self.raw[j, emg_start_idx+i] > 128 :
-                        self.raw[j, emg_start_idx + i] = 128
-                self.raw[:, emg_start_idx + i] = (self.raw[:, emg_start_idx + i] + 128) / 256
-
-            # scale Flex-sensor data
-            flex_start_idx = 1 + self.encoder.emg_dim
-            for i in range(self.encoder.flex_dim):
-                if i == 0:
-                    self.raw[:, flex_start_idx + i] = np.absolute(self.raw[:, flex_start_idx + i])
-                    self.raw[:, flex_start_idx + i] /= flex_max
-                    self.raw[:, flex_start_idx + i] = (self.raw[:, flex_start_idx + i] - 0.15) / (0.35 - 0.15)
-                else:
-                    self.raw[:, flex_start_idx+i] = np.absolute(self.raw[:, flex_start_idx + i])
-                    self.raw[:, flex_start_idx+i] /= flex_max
-                    self.raw[:, flex_start_idx+i] = (self.raw[:, flex_start_idx + i] - 0.15) / (0.4 - 0.15)
-
-
-    SC = Scaler(en=EC)
-    SC.scale(filtered_data)
-    scale_data = SC.raw
-    print(f"scaled:{scale_data[0]}")
-
-    # Save
-    csv_name = time_name + "_scale.csv"
-    sav_loc = fig_dir + '/' + csv_name
-    f = open(sav_loc, 'w')
-    for d in range(len(scale_data)):
-        for v in range(len(scale_data[d])):
-            f.write(str(scale_data[d][v]))
-            if v is not (len(scale_data[d]) - 1):
-                f.write(',')
-        f.write('\n')
-    f.close()
-    print("CSV Saved")
-
-    '''
-    ### Figure
-    p = plotter("Data_Collector", label=scale_data[:, 1:], index=scale_data[:, 0], flex_dim=5)
-
-    # Save Figure
-    train_fig_name = time_name + "_scale_figure"
-    train_fig_dir = fig_dir + '/' + train_fig_name
-    p.plot_scaled(figloc=train_fig_dir)
-    print("Figure " + train_fig_name + " saved\n")
-    '''
-
-
 
 
     class feature_extractor:
@@ -550,7 +518,7 @@ if True:
             return np.asarray(res)
 
 
-    FE = feature_extractor(en=EC, raw=scale_data)
+    FE = feature_extractor(en=EC, raw=filtered_data)
     #FE = feature_extractor(en=Encoder, raw=raw_data)
     feat_data = FE.feature_average()
     print(f"feat:{feat_data[0]}")
@@ -569,3 +537,108 @@ if True:
         f.write('\n')
     f.close()
     print("CSV Saved")
+
+    print("feature label : "+str(len(feat_data[:, 1:][0])))
+    p = plotter("Data_Collector", label=feat_data[:, 1:], index=feat_data[:, 0], flex_dim=5)
+
+    # Save Figure
+    train_fig_name = time_name + "_feature_figure"
+    train_fig_dir = fig_dir + '/' + train_fig_name
+    p.plot_featured(figloc=train_fig_dir)
+    print("Figure " + train_fig_name + " saved\n")
+
+
+    # Scaler
+    class Scaler:
+        def __init__(self, en=encoder(), featured=[]):
+            self.featured = featured
+            self.encoder = en
+            self.data = []
+            self.label = []
+            self.index = []
+
+        def scale(self, data=None, emg_max=1500, flex_max=1024, feature_num=5):
+            if data is not None:
+                self.featured = np.asarray(data)
+
+            # scale EMG featured data
+            emg_start_idx = 1
+
+            for i in range(self.encoder.emg_dim):
+                self.featured[:, emg_start_idx + i] = self.featured[:, emg_start_idx + i] / emg_max
+                self.featured[:, emg_start_idx + i] = self.featured[:, emg_start_idx + i] * 256
+                for j in range(len(self.featured[:, 1 + i])):
+                    self.featured[j, emg_start_idx + i] = int(self.featured[j, emg_start_idx + i])
+                    if self.featured[j, emg_start_idx + i] < -128:
+                        self.featured[j, emg_start_idx + i] = -128
+                    elif self.featured[j, emg_start_idx + i] > 128:
+                        self.featured[j, emg_start_idx + i] = 128
+                # self.featured[:, emg_start_idx + i] = (self.featured[:, emg_start_idx + i] + 128) / 256
+                self.featured[:, emg_start_idx + i] = np.absolute(self.featured[:, emg_start_idx + i] / 256)
+
+            for i in range(self.encoder.emg_dim,self.encoder.emg_dim*2):
+                self.featured[:, emg_start_idx + i] = self.featured[:, emg_start_idx + i]*20 / (emg_max)
+                #print("First : "+str(self.featured[:, emg_start_idx + i]))
+                self.featured[:, emg_start_idx + i] = self.featured[:, emg_start_idx + i] * 256
+                for j in range(len(self.featured[:, 1 + i])):
+                    self.featured[j, emg_start_idx + i] = int(self.featured[j, emg_start_idx + i])
+                    if self.featured[j, emg_start_idx + i] < -128:
+                        self.featured[j, emg_start_idx + i] = -128
+                    elif self.featured[j, emg_start_idx + i] > 128:
+                        self.featured[j, emg_start_idx + i] = 128
+                # self.featured[:, emg_start_idx + i] = (self.featured[:, emg_start_idx + i] + 128) / 256
+                self.featured[:, emg_start_idx + i] = np.absolute(self.featured[:, emg_start_idx + i] / 256)
+
+            for i in range(self.encoder.emg_dim*2,self.encoder.emg_dim*3):
+                self.featured[:, emg_start_idx + i] = self.featured[:, emg_start_idx + i]*250 / (emg_max)
+                self.featured[:, emg_start_idx + i] = self.featured[:, emg_start_idx + i] * 256
+                for j in range(len(self.featured[:, 1 + i])):
+                    self.featured[j, emg_start_idx + i] = int(self.featured[j, emg_start_idx + i])
+                    if self.featured[j, emg_start_idx + i] < -128:
+                        self.featured[j, emg_start_idx + i] = -128
+                    elif self.featured[j, emg_start_idx + i] > 128:
+                        self.featured[j, emg_start_idx + i] = 128
+                # self.featured[:, emg_start_idx + i] = (self.featured[:, emg_start_idx + i] + 128) / 256
+                self.featured[:, emg_start_idx + i] = np.absolute(self.featured[:, emg_start_idx + i] / 256)
+
+            # scale Flex-sensor data
+            flex_start_idx = 1 + self.encoder.emg_dim*3
+            '''
+            for i in range(self.encoder.flex_dim):
+                if i == 0:
+                    self.featured[:, flex_start_idx + i] = np.absolute(self.featured[:, flex_start_idx + i])
+                    self.featured[:, flex_start_idx + i] /= flex_max
+                    self.featured[:, flex_start_idx + i] = (self.featured[:, flex_start_idx + i] - 0.15) / (0.35 - 0.15)
+                else:
+                    self.featured[:, flex_start_idx + i] = np.absolute(self.featured[:, flex_start_idx + i])
+                    self.featured[:, flex_start_idx + i] /= flex_max
+                    self.featured[:, flex_start_idx + i] = (self.featured[:, flex_start_idx + i] - 0.15) / (0.4 - 0.15)
+            '''
+
+    SC = Scaler(en=EC)
+    SC.scale(feat_data)
+    scale_data = SC.featured
+    print(f"scaled:{scale_data[0]}")
+
+    # Save
+    csv_name = time_name + "_scale.csv"
+    sav_loc = fig_dir + '/' + csv_name
+    f = open(sav_loc, 'w')
+    for d in range(len(scale_data)):
+        for v in range(len(scale_data[d])):
+            f.write(str(scale_data[d][v]))
+            if v is not (len(scale_data[d]) - 1):
+                f.write(',')
+        f.write('\n')
+    f.close()
+    print("CSV Saved")
+
+    ### Figure
+    print("scale label : " + str(len(scale_data[:, 1:][0])))
+    p = plotter("Data_Collector", label=scale_data[:, 1:], index=scale_data[:, 0], flex_dim=5)
+
+    # Save Figure
+    train_fig_name = time_name + "_scale_figure"
+    train_fig_dir = fig_dir + '/' + train_fig_name
+    p.plot_scaled(figloc=train_fig_dir)
+    print("Figure " + train_fig_name + " saved\n")

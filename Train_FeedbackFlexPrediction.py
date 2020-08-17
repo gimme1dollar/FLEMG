@@ -20,10 +20,9 @@ now = datetime.now()
 notebook_path_name = '.'
 
 subject_name = "YHyu"
-network_name = "Network_feedback_flex_prediction_feature_average"
+network_name = "Network_feedback_flex_feature_average"
 time_name = now.strftime("%Y%m%d_%H%M")
 model_name = notebook_path_name + '/model/' + network_name
-
 
 try:
 # Create target Directory
@@ -44,7 +43,6 @@ except FileExistsError:
         print("Directory " , subject_dir ,  " already exists\n")
 
 model_dir = subject_dir + '/' +time_name
-
 
 fig_name =  notebook_path_name + "/result/" + network_name
 try:
@@ -67,18 +65,14 @@ except FileExistsError:
         print("Directory",subject_dir,"already exists\n")
 fig_dir = subject_dir
 
-
-
-
-
 #### Data Loading
 
 subject_dir = notebook_path_name + '/data/' + subject_name
 target_dir = subject_dir
-training_name = "20200129_2127_feature"
-testing_name = "20200129_2201_feature"
-training_file = target_dir + "/"+training_name + ".csv"
-testing_file = target_dir + "/"+testing_name + ".csv"
+training_name = "20200129_2127_scale"
+testing_name = "20200129_2201_scale"
+training_file = target_dir + "/" + training_name + ".csv"
+testing_file = target_dir + "/" + testing_name + ".csv"
 
 class encoder:
     def __init__(self, queue_list = [], index_dim = 1, flex_dim = 5, emg_dim = 8, seq_length = 3, emg_active_dim = 8):
@@ -118,7 +112,6 @@ DL.load(training_file)
 raw_data = DL.raw
 
 
-
 class window_builder:
     def __init__(self, en=encoder(), raw=[]):
         self.raw = raw
@@ -141,10 +134,10 @@ class window_builder:
         dataX = []
         dataY = []
         dataT = []
-        for i in range(len(self.raw) - self.encoder.seq_length + 1):
+        for i in range(len(self.raw) - self.encoder.seq_length + 1-batch_size):
             _x = self.raw[i:i + self.encoder.seq_length,
                  self.encoder.index_dim: self.encoder.index_dim + self.encoder.emg_dim + self.encoder.flex_dim]
-            _y = self.raw[i + self.encoder.seq_length - 1,
+            _y = self.raw[i + batch_size + self.encoder.seq_length - 1,
                  self.encoder.index_dim + self.encoder.emg_dim:self.encoder.index_dim + self.encoder.emg_dim + self.encoder.flex_dim]
             _t = self.raw[i:i + self.encoder.seq_length,
                  0:self.encoder.index_dim]
@@ -162,15 +155,14 @@ class window_builder:
         return self.index, self.data, self.label
 
 
-seq_length = 2**8
+seq_length = 2 ** 8
 
-EC_WB = encoder(emg_dim = 8 * 3, flex_dim = 5, seq_length = seq_length)
-WB = window_builder(en = EC_WB, raw=raw_data)
+EC_WB = encoder(emg_dim=8 * 3, flex_dim=5, seq_length=seq_length)
+WB = window_builder(en=EC_WB, raw=raw_data)
 
 trainIndex, trainData, trainLabel = WB.preprocess_feedback_flex_feature_average()
 #print(f"Index example: {trainIndex[0].reshape(-1)}\nData example: {trainData[0]} \nLabel example: {trainLabel[0]}\n")
-print(f"Training Data example: {trainData[0]}\nLabel example: {trainLabel[0]}\n")
-
+print(f"Data example: {trainData[0]}\nLabel example: {trainLabel[0]}\n")
 
 DL.load(testing_file)
 DL_data = DL.raw
@@ -180,13 +172,11 @@ print(f"Test Data example: {testData[0]} \nLabel example: {testLabel[0]}\n")
 
 
 
-
-
 ### Network
 
 
 
-class network_feedback_flex_prediction_feature_average:
+class network_feedback_flex_feature_average:
     def __init__(self, data_encoder = encoder()):
         tf.set_random_seed(777)  # reproducibility
         self.data_encoder = data_encoder
@@ -212,7 +202,7 @@ class network_feedback_flex_prediction_feature_average:
 
         # Input Place holders
         self.X = tf.placeholder(tf.float32, [None, self.seq_length, self.data_dim])
-        self.Y = tf.placeholder(tf.float32, [None, self.output_dim])
+        self.Y = tf.placeholder(tf.float32, [None, self.seq_length, self.output_dim])
 
         # Build a LSTM network
         multi_cells = tf.contrib.rnn.MultiRNNCell([self.build_cell() for _ in range(self.stack_dim)], state_is_tuple=True)
@@ -236,7 +226,7 @@ class network_feedback_flex_prediction_feature_average:
         self.flag_kernel_opened = True
         self.flag_placeholder = True
 
-    def train_network_prediction(self, training_data = [], training_label = [], iterations = 5000, batch_size = 2**14, training_data_changing_iter_size = 100, save_checkpoint=2 ** 5, location = 'model/_', restore = False):
+    def train_network_prediction(self, training_data = [], training_label = [], iterations = 5000, batch_size = 2**14, save_checkpoint=2**5,training_data_changing_iter_size = 100, location = 'model/_', restore = False):
         if restore is False:
             self.sess = tf.Session(graph=self.graph)
             init = tf.global_variables_initializer()
@@ -263,18 +253,20 @@ class network_feedback_flex_prediction_feature_average:
 
 
             # Alter training_data flex true values to flex predictions
-            if i % training_data_changing_iter_size == 0 and i is not 0:
-                prediction = self.infer_feedback(testSet = training_data)
-                for i in range(len(training_data)-seq_length):
-                    if i > seq_length:
-                        training_data[i+seq_length, :, -self.data_encoder.flex_dim:] = prediction[i:i+seq_length]
+
+            if i % training_data_changing_iter_size == 0:
+                prediction = self.infer_feedback_batch(testSet = training_data)
+                for j in range(len(training_data)-seq_length):
+                    if j > seq_length:
+                        training_data[j+seq_length, :, -self.data_encoder.flex_dim:] = prediction[j:j+seq_length]
+
+
 
             # Save Network
             if i % save_checkpoint == 0 and i is not 0:
-                self.saver.save(self.sess, location+"/lstm.ckpt", i)
-                np.savetxt( location+"/loss_"+str(i)+".txt", self.loss_set, delimiter=',')
+                self.saver.save(self.sess, location + "/lstm.ckpt", i)
+                np.savetxt(location + "/loss_" + str(i) + ".txt", self.loss_set, delimiter=',')
                 print(f"[iter: {i}/{iterations}] Model saved at {location}")
-
         self.saver.save(self.sess, location + "/lstm.ckpt", i)
         print(f"[iter: {i}/{iterations}] Model saved at {location}")
 
@@ -306,6 +298,7 @@ class network_feedback_flex_prediction_feature_average:
                 for j in range(self.data_encoder.label_dim):
                     for l in range(self.data_encoder.seq_length):
                         if l == self.data_encoder.seq_length - 1:
+
                             testSet[idx, l, self.data_encoder.emg_dim + j] = test_predict[0][j]
                         else:
                             testSet[idx, l, self.data_encoder.emg_dim + j] = testSet[
@@ -320,7 +313,7 @@ class network_feedback_flex_prediction_feature_average:
             else:
                 prediction = np.vstack((prediction, test_predict))
 
-            if idx % 5000 == 0:
+            if idx % 100 == 0:
                 print(f"{idx}/{len(testSet)} pred : {test_predict[0]}")
 
         # Calculate RMSE
@@ -344,14 +337,23 @@ class network_feedback_flex_prediction_feature_average:
 
                 if idx == 0:
                     prediction = test_predict
+
                 else:
                     prediction = np.vstack((prediction, test_predict))
+
+                print(f"{idx}/{len(testSet)//batch_size} ")
             test_predict = self.sess.run(self.Y_pred, feed_dict={self.X: testSet[(idx+1)*batch_size:]})
             prediction = np.vstack((prediction, test_predict))
 
+    def infer_feedback_batch(self, testSet=[], testLabel=None, batch_size=2**10):
+        if len(testSet)<batch_size:
+            for idx in range(len(testSet)//batch_size):
+                testSet[idx]
+                
         # Calculate RMSE
-        print("Calculating RMSE")
+
         if testLabel is not None:
+            print("Calculating RMSE")
             rmse_val = self.sess.run(self.rmse, feed_dict={self.targets: testLabel, self.predictions: prediction})
             print(f"RMSE: {rmse_val}\n")
             return prediction, rmse_val
@@ -363,171 +365,151 @@ class network_feedback_flex_prediction_feature_average:
         self.sess.close()
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 subject = subject_name
 seq_length = seq_length
 
-learning_rate = 2**(-10)
-iteration = 2**11
-batch_size = 2**10
-training_data_changing_iter_size = 2**7
-save_checkpoint = 2**5
+learning_rate = 2 ** (-10)
+iteration = 2 ** 0
+batch_size = 2 ** 10
+save_checkpoint = 2 ** 5
 
-stack_dim = 2   #stack_dim : the number of layer of LSTM cells
-hidden_dim = 300   #hidden_dim : the number of units in the LSTM cell
+stack_dim = 2  # stack_dim : the number of layer of LSTM cells
+hidden_dim = 300  # hidden_dim : the number of units in the LSTM cell
 
-Network = network_feedback_flex_prediction_feature_average(data_encoder=EC_WB)
+training_data_changing_iter_size = 10
 
-
-
-
+Network = network_feedback_flex_feature_average(data_encoder=EC_WB)
 
 with Network.graph.as_default():
-    print("Model Constructing\n")
     Network.construct_placeholders(learning_rate=learning_rate, hidden_dim=hidden_dim, stack_dim=stack_dim)
+    print("Model Constructed\n")
 
-    print("Model Restoring\n")
-    #Network.restore(location=model_name+"/YHyu/20200202_1907")
+    Network.restore(location=model_name+"/YHyu/20200403_0037")
 
     print("Model Training\n")
-    loss=Network.train_network_prediction(training_data = trainData, training_label = trainLabel,iterations = iteration, batch_size = batch_size, save_checkpoint= save_checkpoint, training_data_changing_iter_size = training_data_changing_iter_size, location = model_dir, restore=False)
+    loss=Network.train_network_prediction(training_data = trainData, training_label = trainLabel,iterations = iteration, batch_size = batch_size, training_data_changing_iter_size = training_data_changing_iter_size, location = model_dir, restore=True)
 
+    print("Train Over\n")
     print("Model " + model_name + " saved\n")
 
-    prediction, rmse_val = Network.infer(testData, testLabel)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    prediction, rmse_val = Network.infer_feedback(testData, testLabel, batch_size)
 
 
 class plotter:
-    def __init__(self, training_name="",testing_name="",net = "", learning_rate = 0, iteration = 0 ,seq_length = 3 ,stack_dim = 0 ,hidden_dim = 0, rmse = [], prediction = [], label = [], index = [], flex_dim = 5):
+    def __init__(self, training_name="", testing_name="", net="", learning_rate=0, iteration=0, seq_length=3,
+                 stack_dim=0, hidden_dim=0, rmse=[], prediction=[], label=[], index=[], flex_dim=5):
 
-        self.training_name=training_name
-        self.testing_name=testing_name
-        self.net=net
-        self.learning_rate=learning_rate
-        self.iteration=iteration
+        self.training_name = training_name
+        self.testing_name = testing_name
+        self.net = net
+        self.learning_rate = learning_rate
+        self.iteration = iteration
         self.seq_length = seq_length
-        self.stack_dim=stack_dim
-        self.hidden_dim=hidden_dim
-        self.rmse=rmse
+        self.stack_dim = stack_dim
+        self.hidden_dim = hidden_dim
+        self.rmse = rmse
         self.prediction = prediction
         self.label = label
         self.index = index
         self.flex_dim = flex_dim
 
-    def plot_encoded(self, subplot_row = 2, size = (20,10), figloc = './result/tmp'):
-        fig = plt.figure(num=5,figsize=size)
+    def plot_encoded(self, subplot_row=2, size=(20, 10), figloc='./result/tmp'):
+        fig = plt.figure(num=5, figsize=size)
         plt.figure(5)
-        #print(f"{self.index[:3, :, 0].reshape(-1)} \n{self.prediction[:3, 0]} \n{self.label[:3, 0]}")
+        # print(f"{self.index[:3, :, 0].reshape(-1)} \n{self.prediction[:3, 0]} \n{self.label[:3, 0]}")
 
         for i in range(len(self.label[0])):
-            plt.subplot(subplot_row, int((len(self.label[0])+1)//subplot_row ), i+1)
+            plt.subplot(subplot_row, int((len(self.label[0]) + 1) // subplot_row), i + 1)
 
-            if i< (len(self.label[0])-self.flex_dim):
-                plt.ylim([-20000,20000])
-            elif i>=(len(self.label[0])-self.flex_dim):
-                plt.ylim([0,500])
+            if i < (len(self.label[0]) - self.flex_dim):
+                plt.ylim([-20000, 20000])
+            elif i >= (len(self.label[0]) - self.flex_dim):
+                plt.ylim([0, 500])
 
             plt.xlabel("time(s)")
-            if i< (len(self.label[0])-self.flex_dim):
-                plt.plot(self.index[:], self.label[:,i],'r')
-            elif i>=(len(self.label[0])-self.flex_dim):
-                plt.plot(self.index[:], self.label[:,i],'b')
+            if i < (len(self.label[0]) - self.flex_dim):
+                plt.plot(self.index[:], self.label[:, i], 'r',linewidth=0.5)
+            elif i >= (len(self.label[0]) - self.flex_dim):
+                plt.plot(self.index[:], self.label[:, i], 'b',linewidith=0.5)
 
-            if i< (len(self.label[0])-self.flex_dim):
-                plt.title(f"emg ch {i+1}")
-            elif i>=(len(self.label[0])-self.flex_dim):
-                plt.title(f"flex order {i+1-(len(self.label[0])-self.flex_dim)}")
-        plt.suptitle(f"Training : {self.training_name}, Testing : {self.testing_name}, Model : {self.net}, Alpha : {self.learning_rate}, Iteration : {self.iteration}, Seq_length : {self.seq_length}, Stack_dim : {self.stack_dim}, Hidden_dim : {self.hidden_dim}, avgRMSE : {np.mean(self.rmse):0.3f}")
+            if i < (len(self.label[0]) - self.flex_dim):
+                plt.title(f"emg ch {i + 1}")
+            elif i >= (len(self.label[0]) - self.flex_dim):
+                plt.title(f"flex order {i + 1 - (len(self.label[0]) - self.flex_dim)}")
+        plt.suptitle(
+            f"Training : {self.training_name}, Testing : {self.testing_name}, Model : {self.net}, Alpha : {self.learning_rate}, Iteration : {self.iteration}, Seq_length : {self.seq_length}, Stack_dim : {self.stack_dim}, Hidden_dim : {self.hidden_dim}, avgRMSE : {np.mean(self.rmse):0.3f}")
         fig.savefig(figloc, dpi=fig.dpi)
+        plt.ion()
         plt.show()
+        plt.pause(1)
 
-    def plot_comparison(self, subplot_row = 2, size = (20,10), figloc = './result/tmp'):
-        fig = plt.figure(num=6,figsize=size)
+    def plot_comparison(self, subplot_row=2, size=(20, 10), figloc='./result/tmp'):
+        fig = plt.figure(num=6, figsize=size)
         plt.figure(6)
-        #print(f"{self.index[:3, :, 0].reshape(-1)} \n{self.prediction[:3, 0]} \n{self.label[:3, 0]}")
+        # print(f"{self.index[:3, :, 0].reshape(-1)} \n{self.prediction[:3, 0]} \n{self.label[:3, 0]}")
         for i in range(len(self.label[0])):
-            plt.subplot(subplot_row, int((len(self.label[0])+1)//subplot_row ), i+1)
-            plt.ylim([0,1])
+            plt.subplot(subplot_row, int((len(self.label[0]) + 1) // subplot_row), i + 1)
+            plt.ylim([0, 1])
             plt.xlabel("time(s)")
-            plt.plot(self.index[:,:,0], self.prediction[:,i],'--r', self.index[:,:,0], self.label[:,i],'b')
-            if i< (len(self.label[0])-self.flex_dim):
-                plt.title(f"emg ch {i+1},rmse {self.rmse[i]:0.3f}")
-            elif i>=(len(self.label[0])-self.flex_dim):
-                plt.title(f"flex order {i+1-(len(self.label[0])-self.flex_dim)},rmse {self.rmse[i]:0.3f}")
-        plt.suptitle(f"Model : {self.net}, Alpha : {self.learning_rate}, Iteration : {self.iteration}, Seq_length : {self.seq_length}, Stack_dim : {self.stack_dim}, Hidden_dim : {self.hidden_dim}, avgRMSE : {np.mean(self.rmse):0.3f}")
+            plt.plot(self.index[:, :, 0], self.prediction[:, i],'r',linewidth=0.5)
+            plt.plot(self.index[:, :, 0], self.label[:, i], 'b--',linewidth=0.5)
+            if i < (len(self.label[0]) - self.flex_dim):
+                plt.title(f"emg ch {i + 1},rmse {self.rmse[i]:0.3f}")
+            elif i >= (len(self.label[0]) - self.flex_dim):
+                plt.title(f"flex order {i + 1 - (len(self.label[0]) - self.flex_dim)},rmse {self.rmse[i]:0.3f}")
+        plt.suptitle(
+            f"Model : {self.net}, Alpha : {self.learning_rate}, Iteration : {self.iteration}, Seq_length : {self.seq_length}, Stack_dim : {self.stack_dim}, Hidden_dim : {self.hidden_dim}, avgRMSE : {np.mean(self.rmse):0.3f}")
         fig.savefig(figloc, dpi=fig.dpi)
+        plt.ion()
         plt.show()
+        plt.pause(1)
 
-    def plot_rmse(self, subplot_row = 2, size = (20,10), figloc = './result/tmp'):
-        fig = plt.figure(num=7,figsize=size)
+    def plot_rmse(self, subplot_row=2, size=(20, 10), figloc='./result/tmp'):
+        fig = plt.figure(num=7, figsize=size)
         plt.figure(7)
 
         fig.savefig(figloc, dpi=fig.dpi)
+        plt.ion()
         plt.show()
+        plt.pause(1)
 
-    def plot_training_graph(self, loss=[], iteration=5000, size=(20,10), figloc = './result'):
-        step=list(range(iteration))
+    def plot_training_graph(self, loss=[], iteration=5000, size=(20, 10), figloc='./result'):
+        step = list(range(iteration))
         min_loss = np.amin(loss)
-        fig = plt.figure(num=8,figsize=size)
+        fig = plt.figure(num=8, figsize=size)
         plt.figure(8)
         plt.title(f"Model {self.net},min_loss {min_loss}")
         plt.xlabel("iteration")
         plt.ylabel("loss")
-        plt.plot(step,loss)
+        plt.plot(step, loss)
         fig.savefig(figloc, dpi=fig.dpi)
+        plt.ion()
         plt.show()
+        plt.pause(1)
 
-p = plotter(training_name,testing_name,"network_default_feature_average",learning_rate=learning_rate,iteration=iteration, seq_length=seq_length, stack_dim=stack_dim, hidden_dim=hidden_dim, rmse=rmse_val,prediction=np.asarray(prediction),label=testLabel, index=testIndex, flex_dim=flex_dim)
+
+p = plotter(training_name, testing_name, "network_default_feature_average", learning_rate=learning_rate,
+            iteration=iteration, seq_length=seq_length, stack_dim=stack_dim, hidden_dim=hidden_dim, rmse=rmse_val,
+            prediction=np.asarray(prediction), label=testLabel, index=testIndex, flex_dim=flex_dim)
 
 test_data_name = now.strftime("%Y%m%d_%H%M_test.csv")
 test_data_dir = fig_dir + '/' + test_data_name
-test_data=np.concatenate((testIndex[:,0],testLabel,np.asarray(prediction)),axis=1)
-np.savetxt(test_data_dir,test_data,delimiter=',')
+test_data = np.concatenate((testIndex[:, 0], testLabel, np.asarray(prediction)), axis=1)
+np.savetxt(test_data_dir, test_data, delimiter=',')
 print(f"Data {test_data_name} saved\n")
 
 train_fig_name = now.strftime("%Y%m%d_%H%M_train")
 train_fig_dir = fig_dir + '/' + train_fig_name
-p.plot_training_graph(loss,iteration,figloc=train_fig_dir)
-print("Figure "+train_fig_name+" saved\n")
+p.plot_training_graph(loss, iteration, figloc=train_fig_dir)
+print("Figure " + train_fig_name + " saved\n")
 
 train_data_name = now.strftime("%Y%m%d_%H%M_loss.csv")
 train_data_dir = fig_dir + '/' + train_data_name
-train_data=loss
-np.savetxt(train_data_dir,train_data,delimiter=',')
+train_data = loss
+np.savetxt(train_data_dir, train_data, delimiter=',')
 print(f"Data {train_data_name} saved\n")
 
 test_fig_name = now.strftime("%Y%m%d_%H%M_test")
 test_fig_dir = fig_dir + '/' + test_fig_name
-p.plot_comparison(subplot_row = 2, size = (20,10), figloc=test_fig_dir)
-print("Figure "+test_fig_name+" saved\n")
+p.plot_comparison(subplot_row=2, size=(20, 10), figloc=test_fig_dir)
+print("Figure " + test_fig_name + " saved\n")
